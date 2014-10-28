@@ -6,14 +6,16 @@
   <body>
     <center>
 	  <h2>Base Converter</h2>
-	  <input type="text" placeholder="number">
-      <p>From Base:</p><input type="number" name="From Base" min="2" max="36" value="2">
-	  <p>To Base:</p><input type="number" name="To Base" min="2" max="36" value="10">
-	  <button>Convert</button>
+	  <input type="text" class="value" placeholder="number">
+      <p>From Base: <input type="number" class="fromBase" min="2" max="36" value="2"></p>
+	  <p>To Base: <input type="number" class="toBase" min="2" max="36" value="10"></p>
+	  <button class="btn">Convert</button>
+	  <h3>Result</h3>
+	  <p class="result"></p>
 	</center>
 
-    <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="app.js"></script>-->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="base-converter.js"></script>
     
   </body>
 </html>
