@@ -1,5 +1,6 @@
 var screenWidth = $(window).width();
 var screenHeight = $(window).height();
+$('.ship').css('top',screenHeight/2-10 + 'px').css('left',screenWidth/2-10 + 'px');
 var going = false;
 var interval;
 var ship;
@@ -52,7 +53,7 @@ var main = function() {
 }
 
 var restart = function(){
-	ship = new Ship(100, 100, 0, 0);
+	ship = new Ship(screenWidth/2, screenHeight/2, 0, 0);
 	bullets = [];
 	$('.bullet').remove();
 }
