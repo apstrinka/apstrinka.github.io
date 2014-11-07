@@ -1,0 +1,9 @@
+body{
+	background-color: #000000;
+}
+
+.ship{
+  height: 20px;
+  width: 20px;
+  position:absolute;
+}
