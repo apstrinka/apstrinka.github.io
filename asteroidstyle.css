@@ -2,8 +2,19 @@ body{
 	background-color: #000000;
 }
 
+p{
+	color: #ffffff;
+	text-align: center;
+}
+
 .ship{
   height: 20px;
   width: 20px;
-  position:absolute;
+  position: absolute;
+}
+
+.bullet{
+	height: 6px;
+	width: 6px;
+	position: absolute;
 }
