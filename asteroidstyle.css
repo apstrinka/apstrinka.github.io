@@ -18,3 +18,9 @@ p{
 	width: 6px;
 	position: absolute;
 }
+
+.asteroid{
+	height: 80px;
+	width: 80px;
+	position: absolute;
+}

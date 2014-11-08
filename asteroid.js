@@ -5,7 +5,7 @@ var going = false;
 var interval;
 var ship;
 var bullets = [];
-
+var asteroids = [];
 
 var main = function() {
 	$(document).keydown(function(e){
@@ -56,13 +56,27 @@ var restart = function(){
 	ship = new Ship(screenWidth/2, screenHeight/2, 0, 0);
 	bullets = [];
 	$('.bullet').remove();
+	asteroids = [];
+	$('.asteroid').remove();
+	var xPos = Math.floor(Math.random()*screenWidth);
+	var yPos = Math.floor(Math.random()*screenHeight);
+	var xVel = Math.floor(Math.random()*20 - 10);
+	var yVel = Math.floor(Math.random()*20 - 10);
+	var rot = Math.floor(Math.random()*20 - 10);
+	asteroids.push(new Asteroid(xPos, yPos, xVel, yVel, rot));
 }
 
 var update = function(){
 	ship.update();
 	ship.draw();
+	var temp = [];
 	for (var i = 0; i < bullets.length; i++){
 		var t = bullets[i];
+		t.update();
+		t.draw();
+	}
+	for (var i = 0; i < asteroids.length; i++){
+		var t = asteroids[i];
 		t.update();
 		t.draw();
 	}
@@ -91,6 +105,7 @@ function Ship(xPos, yPos, xVel, yVel){
 var bulletNum = 0;
 
 function Bullet(xPos, yPos, xVel, yVel){
+	this.decay = 100;
 	this.xPos = xPos;
 	this.yPos = yPos;
 	this.xVel = xVel;
@@ -101,16 +116,51 @@ function Bullet(xPos, yPos, xVel, yVel){
 	$('body').append(img);
 	
 	this.update = function(){
+		this.decay = this.decay - 1;
 		this.xPos = (this.xPos + this.xVel + screenWidth) % screenWidth;
 		this.yPos = (this.yPos + this.yVel + screenHeight) % screenHeight;
 	}
 	
 	this.draw = function(){
-		var top = (this.yPos-3) + 'px';
-		var left = (this.xPos-3) + 'px';
-		var img = $('#'+this.id).css('top',top).css('left',left);
+		if (this.decay > 0){
+			var top = (this.yPos-3) + 'px';
+			var left = (this.xPos-3) + 'px';
+			var img = $('#'+this.id).css('top',top).css('left',left);
+		} else {
+			$('#'+this.id).remove();
+		}
 		
 	}
+}
+
+var asteroidNum = 0;
+
+function Asteroid(xPos, yPos, xVel, yVel, rot){
+	this.xPos = xPos;
+	this.yPos = yPos;
+	this.xVel = xVel;
+	this.yVel = yVel;
+	this.ang = Math.floor(Math.random()*360);
+	this.rot = rot;
+	asteroidNum++;
+	this.id = 'asteroid' + asteroidNum;
+	var imgNum = Math.floor(Math.random()*2+1);
+	var img = $('<img/>').addClass('asteroid').attr('id', this.id).attr('src', 'asteroid'+imgNum+'.png').css('top', yPos+'px').css('left', xPos+'px');
+	$('body').append(img);
+	
+	this.update = function(){
+		this.xPos = (this.xPos + this.xVel + screenWidth) % screenWidth;
+		this.yPos = (this.yPos + this.yVel + screenHeight) % screenHeight;
+		this.ang = this.ang + rot;
+	}
+	
+	this.draw = function(){
+		var top = (this.yPos-40) + 'px';
+		var left = (this.xPos-40) + 'px';
+		var rotate = 'rotate(' + this.ang + 'deg)';
+		var img = $('#'+this.id).css('top',top).css('left',left).css('-webkit-transform',rotate).css('-moz-transform',rotate).css('-o-transform',rotate).css('-ms-transform',rotate).css('transform',rotate);
+	}
+	
 }
 
 $(document).ready(main);
