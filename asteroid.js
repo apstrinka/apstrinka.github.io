@@ -67,22 +67,70 @@ var restart = function(){
 }
 
 var update = function(){
+	//Update positions
 	ship.update();
+	for (var i = 0; i < bullets.length; i++){
+		var b = bullets[i];
+		b.update();
+	}
+	for (var i = 0; i < asteroids.length; i++){
+		var a = asteroids[i];
+		a.update();
+	}
+	
+	//Check for collisions
+	for (var i = 0; i < bullets.length; i++){
+		var b = bullets[i];
+		var index = indexOfOverlappingAsteroid(b);
+		if (index >= 0){
+			removeBullet(i);
+			breakAsteroid(index);
+		} else if (b.decay < 0) {
+			removeBullet(i);
+		}
+	}
+	
+	//Draw
 	ship.draw();
-	var temp = [];
 	for (var i = 0; i < bullets.length; i++){
 		var t = bullets[i];
-		t.update();
 		t.draw();
 	}
 	for (var i = 0; i < asteroids.length; i++){
 		var t = asteroids[i];
-		t.update();
 		t.draw();
 	}
 }
 
+var indexOfOverlappingAsteroid = function(thing){
+	for (var i = 0; i < asteroids.length; i++){
+		var a = asteroids[i];
+		var dist = Math.sqrt(Math.pow(a.xPos-thing.xPos,2) + Math.pow(a.yPos-thing.yPos,2));
+		if (dist < a.radius + thing.radius)
+			return i;
+	}
+	return -1;
+}
+
+var removeBullet = function(index){
+	var b = bullets[index];
+	$('#'+b.id).remove();
+	bullets.splice(index, 1);
+}
+
+var breakAsteroid = function(index){
+	var a = asteroids[index];
+	$('#'+a.id).remove();
+	asteroids.splice(index, 1);
+	var dx = Math.floor(Math.random()*20-10);
+	var dy = Math.floor(Math.random()*20-10);
+	var dr = Math.floor(Math.random()*20-10);
+	asteroids.push(new Asteroid(a.xPos, a.yPos, a.xVel+dx, a.yVel+dy, a.rot+dr));
+	asteroids.push(new Asteroid(a.xPos, a.yPos, a.xVel-dx, a.yVel-dy, a.rot-dr));
+}
+
 function Ship(xPos, yPos, xVel, yVel){
+	this.radius = 7;
 	this.xPos = xPos;
 	this.yPos = yPos;
 	this.xVel = xVel;
@@ -105,6 +153,7 @@ function Ship(xPos, yPos, xVel, yVel){
 var bulletNum = 0;
 
 function Bullet(xPos, yPos, xVel, yVel){
+	this.radius = 1;
 	this.decay = 100;
 	this.xPos = xPos;
 	this.yPos = yPos;
@@ -122,20 +171,16 @@ function Bullet(xPos, yPos, xVel, yVel){
 	}
 	
 	this.draw = function(){
-		if (this.decay > 0){
-			var top = (this.yPos-3) + 'px';
-			var left = (this.xPos-3) + 'px';
-			var img = $('#'+this.id).css('top',top).css('left',left);
-		} else {
-			$('#'+this.id).remove();
-		}
-		
+		var top = (this.yPos-3) + 'px';
+		var left = (this.xPos-3) + 'px';
+		var img = $('#'+this.id).css('top',top).css('left',left);
 	}
 }
 
 var asteroidNum = 0;
 
 function Asteroid(xPos, yPos, xVel, yVel, rot){
+	this.radius = 40;
 	this.xPos = xPos;
 	this.yPos = yPos;
 	this.xVel = xVel;
