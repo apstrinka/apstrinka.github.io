@@ -13,22 +13,12 @@ var main = function() {
 	$(document).keydown(function(e){
 		var code = (e.keyCode ? e.keyCode : e.which);
 		switch(code) {
-		case 83: //s
-			if (going){
-				clearInterval(interval);
-				going = false;
-			} else {
-				interval = setInterval(update, 50);
-				going = true;
-				restart();
-				$('.instructions').fadeOut(2000);//, function() {
-					//$(this).show().css({visibility: 'hidden'});
-				//});
-			}
+		case 32: //space
+			ship.isFiring = true;
 			break;
 		case 37: //left arrow
 			if (going){
-				ship.ang = ship.ang - 10;
+				ship.rot = - 15;
 			}
 			break;
 		case 38: //up arrow
@@ -39,17 +29,32 @@ var main = function() {
 			break;
 		case 39: //right arrow
 			if (going){
-				ship.ang = ship.ang + 10;
+				ship.rot = 15;
 			}
 			break;
-		case 32: //space
-			if (going && ship.coolDown == 0){
-				ship.coolDown = 5;
-				var xVel = ship.xVel + 10*Math.cos(ship.ang*Math.PI/180);
-				var yVel = ship.yVel + 10*Math.sin(ship.ang*Math.PI/180);
-				
-				bullets.push(new Bullet(ship.xPos, ship.yPos, xVel, yVel));
+		case 83: //s
+			if (going){
+				die();
+			} else {
+				interval = setInterval(update, 50);
+				going = true;
+				restart();
+				$('.instructions').fadeOut(2000);//, function() {
+					//$(this).show().css({visibility: 'hidden'});
+				//});
 			}
+			break;
+		}
+	});
+	$(document).keyup(function(e){
+		var code = (e.keyCode ? e.keyCode : e.which);
+		switch(code) {
+		case 32: //space
+			ship.isFiring = false;
+			break;
+		case 37: //left arrow
+		case 39: //right arrow
+			ship.rot = 0;
 			break;
 		}
 	});
@@ -62,12 +67,22 @@ var restart = function(){
 	$('.bullet').remove();
 	asteroids = [];
 	$('.asteroid').remove();
+	for (var i = 0; i < 5; i++)
+		makeAsteroid();
+}
+
+var makeAsteroid = function(){
 	var xPos = Math.floor(Math.random()*screenWidth);
 	var yPos = Math.floor(Math.random()*screenHeight);
 	var xVel = Math.floor(Math.random()*20 - 10);
 	var yVel = Math.floor(Math.random()*20 - 10);
 	var rot = Math.floor(Math.random()*20 - 10);
 	asteroids.push(new Asteroid(xPos, yPos, xVel, yVel, rot, 40));
+}
+
+var die = function(){
+	clearInterval(interval);
+	going = false;
 }
 
 var update = function(){
@@ -83,6 +98,9 @@ var update = function(){
 	}
 	
 	//Check for collisions
+	if (indexOfOverlappingAsteroid(ship) >=0){
+		die();
+	}
 	for (var i = 0; i < bullets.length; i++){
 		var b = bullets[i];
 		var index = indexOfOverlappingAsteroid(b);
@@ -125,8 +143,8 @@ var removeBullet = function(index){
 }
 
 var breakAsteroid = function(index){
-	score++;
 	var a = asteroids[index];
+	score = score + 40/a.radius;
 	$('#'+a.id).remove();
 	asteroids.splice(index, 1);
 	if (a.radius > 5){
@@ -144,12 +162,17 @@ function Ship(xPos, yPos, xVel, yVel){
 	this.xVel = xVel;
 	this.yVel = yVel;
 	this.ang = 0;
+	this.rot = 0;
 	this.radius = 7;
+	this.isFiring = false;
 	this.coolDown = 0;
 	
 	this.update = function(){
 		this.xPos = (this.xPos + this.xVel + screenWidth) % screenWidth;
 		this.yPos = (this.yPos + this.yVel + screenHeight) % screenHeight;
+		this.ang = this.ang + this.rot;
+		if (this.coolDown == 0 && this.isFiring)
+			this.fire();
 		if (this.coolDown > 0)
 			this.coolDown--;
 	}
@@ -162,6 +185,14 @@ function Ship(xPos, yPos, xVel, yVel){
 		var rotate = 'rotate(' + this.ang + 'deg)';
 		var div = $('.ship').css('top',top).css('left',left).css('height', height).css('width', width);
 		div.children().css('-webkit-transform',rotate).css('-moz-transform',rotate).css('-o-transform',rotate).css('-ms-transform',rotate).css('transform',rotate);
+	}
+	
+	this.fire = function(){
+		ship.coolDown = 3;
+		var xVel = this.xVel + 10*Math.cos(this.ang*Math.PI/180);
+		var yVel = this.yVel + 10*Math.sin(this.ang*Math.PI/180);
+				
+		bullets.push(new Bullet(this.xPos, this.yPos, xVel, yVel));
 	}
 }
 
@@ -208,7 +239,7 @@ function Asteroid(xPos, yPos, xVel, yVel, rot, radius){
 	this.radius = radius;
 	asteroidNum++;
 	this.id = 'asteroid' + asteroidNum;
-	var imgNum = Math.floor(Math.random()*2+1);
+	var imgNum = Math.floor(Math.random()*4+1);
 	var div = $('<div>').addClass('asteroid').attr('id', this.id).css('height', 3*this.radius).css('width', 3*this.radius).css('top', yPos+'px').css('left', xPos+'px');
 	var img = $('<img/>').attr('src', 'asteroid'+imgNum+'.png').css('height', 2*this.radius).css('width', 2*this.radius).css('top', .5*this.radius+'px').css('left', .5*this.radius+'px');
 	div.append(img);
