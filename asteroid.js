@@ -4,6 +4,7 @@ $('.ship').css('top',screenHeight/2-15 + 'px').css('left',screenWidth/2-15 + 'px
 $('.ship').children().css('top', 5).css('left', 5);
 var going = false;
 var score = 0;
+var newAsteroid = 100;
 var interval;
 var ship;
 var bullets = [];
@@ -17,31 +18,18 @@ var main = function() {
 			ship.isFiring = true;
 			break;
 		case 37: //left arrow
-			if (going){
-				ship.rot = - 15;
-			}
+			ship.rot = - 15;
 			break;
 		case 38: //up arrow
-			if (going){
-				ship.xVel = ship.xVel + 2*Math.cos(ship.ang*Math.PI/180);
-				ship.yVel = ship.yVel + 2*Math.sin(ship.ang*Math.PI/180);
-			}
+			ship.xVel = ship.xVel + 2*Math.cos(ship.ang*Math.PI/180);
+			ship.yVel = ship.yVel + 2*Math.sin(ship.ang*Math.PI/180);
 			break;
 		case 39: //right arrow
-			if (going){
-				ship.rot = 15;
-			}
+			ship.rot = 15;
 			break;
 		case 83: //s
-			if (going){
-				die();
-			} else {
-				interval = setInterval(update, 50);
-				going = true;
+			if (!going){
 				restart();
-				$('.instructions').fadeOut(2000);//, function() {
-					//$(this).show().css({visibility: 'hidden'});
-				//});
 			}
 			break;
 		}
@@ -61,6 +49,8 @@ var main = function() {
 }
 
 var restart = function(){
+	interval = setInterval(update, 50);
+	going = true;
 	score = 0;
 	ship = new Ship(screenWidth/2, screenHeight/2, 0, 0);
 	bullets = [];
@@ -69,6 +59,7 @@ var restart = function(){
 	$('.asteroid').remove();
 	for (var i = 0; i < 5; i++)
 		makeAsteroid();
+	$('.instructions').fadeOut(2000);
 }
 
 var makeAsteroid = function(){
@@ -83,6 +74,7 @@ var makeAsteroid = function(){
 var die = function(){
 	clearInterval(interval);
 	going = false;
+	$('.instructions').html('You died.<br />Press S to restart').fadeIn(500);
 }
 
 var update = function(){
@@ -110,6 +102,12 @@ var update = function(){
 		} else if (b.decay < 0) {
 			removeBullet(i);
 		}
+	}
+	
+	newAsteroid--;
+	if (newAsteroid == 0){
+		newAsteroid = 100;
+		makeAsteroid();
 	}
 	
 	//Draw
