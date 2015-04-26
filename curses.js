@@ -137,7 +137,7 @@
 		messageWindow.drawText(0, 0, message);
 		if (other === pc){
 			statusWindow.clear();
-			statusWindow.drawText(0, 0, other.hp);
+			statusWindow.drawText(0, 0, "HP:" + pc.hp + "/" + pc.maxHp);
 		}
 		if (other.hp <= 0){
 			die(other);
@@ -194,7 +194,7 @@
 	for (i = 0; i < enemies.length; i++){
 		drawCharacter(enemies[i]);
 	}
-	statusWindow.drawText(0,0,pc.hp);
+	statusWindow.drawText(0,0,"HP:" + pc.hp + "/" + pc.maxHp);
 	
 	$(document).keydown(function(e){
 		if (pc.hp > 0){
