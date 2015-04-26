@@ -74,24 +74,22 @@ var VIEW = function(){
 			cells[i][w].text("│");
 			cells[i][cols-1].text("│");
 		}
-		for (i = 1; i < w; i++){
-			for (j = 1; j < rows-1; j++){
-				if (i === Math.floor(w/2) && j === Math.floor(rows/2))
-					cells[j][i].text("@").css("color", "#ff0000");
-				else if (i === Math.floor(w/2)+1 && j === Math.floor(rows/2))
-					cells[j][i].text("m").css("color", "#0000ff");
-				else
-					cells[j][i].text(".");
-			}
-		}
 	}
-	drawBorders(Math.floor(2*cols/3), 3, rows-6);
 	
 	var Window = function(left, top, width, height){
 		this.x = left;
 		this.y = top;
 		this.width = width;
 		this.height = height;
+		
+		this.clear = function(){
+			var i, j;
+			for (i = 0; i < this.width; i++){
+				for (j = 0; j < this.height; j++){
+					cells[j+this.y][i+this.x].text('\u00a0');
+				}
+			}
+		}
 		
 		this.setText = function(x, y, text){
 			if (x < this.width && x + this.x < cols && y < this.height && y + this.y < rows){
@@ -104,6 +102,14 @@ var VIEW = function(){
 				cells[y+this.y][x+this.x].css("color", color);
 			}
 		}
+		
+		this.drawText = function(x, y, text){
+			var i;
+			text = String(text);
+			for (i = 0; i < text.length; i++){
+				this.setText(x+i%this.width, y+Math.floor(i/this.width), text.charAt(i));
+			}
+		}
 	}
 	
 	return{
@@ -111,11 +117,14 @@ var VIEW = function(){
 			white:"#ffffff",
 			red:"#ff0000",
 			green:"#00ff00",
+			darkGreen:"#008000",
 			blue:"#0000ff",
+			brown:"#804000",
 			gray:"#7f7f7f",
 			black:"#000000"},
 		rows:rows,
 		cols:cols,
+		drawBorders:drawBorders,
 		Window:Window
 	}
 }();
