@@ -1,11 +1,16 @@
 body{
 	background-color: #000000;
 	font-family: "Lucida Console", monospace;
-	/*color: #ff0000;
-	font-size: 25px;*/
+	color: #ffffff;
+	/*font-size: 25px;*/
 	text-align: center;
 }
 
 div{
 	position: relative;
+}
+
+#messages{
+	height: 100px;
+	overflow-y: scroll;
 }

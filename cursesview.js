@@ -11,7 +11,10 @@ var VIEW = function(){
 	var xOffset = (screenWidth - (cols*size/2))/2;
 	var yOffset = (screenHeight - (rows*size))/2;
 	var cells = new Array(rows);
+	var lines = new Array(rows);
 	var div = $('#view');
+	var statusDiv = $('#status');
+	var messageDiv = $('#messages');
 	var i, j;
 	
 	div.css("font-size", size+"px").css("line-height", size+"px").css("margin-top", yOffset+"px");
@@ -34,6 +37,20 @@ var VIEW = function(){
 		}
 		div.append($('<br>'));
 	}
+	
+	var ULposition = cells[1][Math.floor(2*cols/3)+1].offset();
+	var URposition = cells[1][cols-1].offset();
+	var width = URposition.left - ULposition.left;
+	var height = cells[1][cols-1].height();
+	height = height*2;
+	statusDiv.css("font-size", size+"px").css("line-height", size+"px").css("position", "absolute").css(ULposition).css("height", height+"px").css("width", width+"px");
+	
+	ULposition = cells[4][Math.floor(2*cols/3)+1].offset();
+	URposition = cells[4][cols-1].offset();
+	width = URposition.left - ULposition.left;
+	height = cells[4][cols-1].height();
+	height = height*(rows-7);
+	messageDiv.css("font-size", size+"px").css("line-height", size+"px").css("position", "absolute").css(ULposition).css("height", height+"px").css("width", width+"px");
 	
 	var drawBorders = function(w, h1, h2){
 		var i, j;
@@ -109,6 +126,25 @@ var VIEW = function(){
 			for (i = 0; i < text.length; i++){
 				this.setText(x+i%this.width, y+Math.floor(i/this.width), text.charAt(i));
 			}
+			messageDiv.prepend(text + '<br />');
+		}
+	}
+	
+	var updateStatus = function(text){
+		statusDiv.text(text);
+	}
+	
+	var messageBuffer = "";
+	var bufferMessage = function(text){
+		messageBuffer = messageBuffer + text;
+	}
+	
+	var appendMessages = function(){
+		if (messageBuffer !== ""){
+			var p = $('<p>');
+			p.text(messageBuffer);
+			messageDiv.prepend(p);
+			messageBuffer = "";
 		}
 	}
 	
@@ -125,6 +161,9 @@ var VIEW = function(){
 		rows:rows,
 		cols:cols,
 		drawBorders:drawBorders,
-		Window:Window
+		Window:Window,
+		updateStatus:updateStatus,
+		bufferMessage:bufferMessage,
+		appendMessages:appendMessages
 	}
 }();

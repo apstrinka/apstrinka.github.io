@@ -2,8 +2,8 @@
 	"use strict";
 	var i;
 	var mapWindow = new VIEW.Window(1, 1, Math.floor(2*VIEW.cols/3)-1, VIEW.rows-2);
-	var statusWindow = new VIEW.Window(Math.floor(2*VIEW.cols/3)+1, 1, VIEW.cols-Math.floor(2*VIEW.cols/3)-2, 2);
-	var messageWindow = new VIEW.Window(Math.floor(2*VIEW.cols/3)+1, 4, VIEW.cols-Math.floor(2*VIEW.cols/3)-2, VIEW.rows-7);
+	//var statusWindow = new VIEW.Window(Math.floor(2*VIEW.cols/3)+1, 1, VIEW.cols-Math.floor(2*VIEW.cols/3)-2, 2);
+	//var messageWindow = new VIEW.Window(Math.floor(2*VIEW.cols/3)+1, 4, VIEW.cols-Math.floor(2*VIEW.cols/3)-2, VIEW.rows-7);
 	var pc = {
 		x: Math.floor(mapWindow.width/2),
 		y: Math.floor(mapWindow.height/2),
@@ -103,8 +103,10 @@
 		mapWindow.setText(character.x, character.y, map.tiles[character.y][character.x].text);
 		mapWindow.setColor(character.x, character.y, map.tiles[character.y][character.x].color);
 		if (character === pc){
-			messageWindow.clear();
-			messageWindow.drawText(0, 0, "You died.");
+			//messageWindow.clear();
+			//messageWindow.drawText(0, 0, "You died.");
+			VIEW.bufferMessage("You died");
+			VIEW.appendMessages();
 		} else {
 			var index = enemies.indexOf(character);
 			enemies.splice(index, 1);
@@ -133,11 +135,14 @@
 			message += " and kills it";
 		else if (damage > 0)
 			message += " and does " + damage + " points of damage";
-		messageWindow.clear();
-		messageWindow.drawText(0, 0, message);
+		message += ". ";
+		//messageWindow.clear();
+		//messageWindow.drawText(0, 0, message);
+		VIEW.bufferMessage(message);
 		if (other === pc){
-			statusWindow.clear();
-			statusWindow.drawText(0, 0, "HP:" + pc.hp + "/" + pc.maxHp);
+			//statusWindow.clear();
+			//statusWindow.drawText(0, 0, "HP:" + pc.hp + "/" + pc.maxHp);
+			VIEW.updateStatus("HP:" + pc.hp + "/" + pc.maxHp);
 		}
 		if (other.hp <= 0){
 			die(other);
@@ -194,7 +199,8 @@
 	for (i = 0; i < enemies.length; i++){
 		drawCharacter(enemies[i]);
 	}
-	statusWindow.drawText(0,0,"HP:" + pc.hp + "/" + pc.maxHp);
+	//statusWindow.drawText(0,0,"HP:" + pc.hp + "/" + pc.maxHp);
+	VIEW.updateStatus("HP:" + pc.hp + "/" + pc.maxHp);
 	
 	$(document).keydown(function(e){
 		if (pc.hp > 0){
@@ -237,6 +243,7 @@
 				break;
 			}
 			moveEnemies();
+			VIEW.appendMessages();
 		}
 	});
 });
