@@ -11,7 +11,6 @@ var VIEW = function(){
 	var xOffset = (screenWidth - (cols*size/2))/2;
 	var yOffset = (screenHeight - (rows*size))/2;
 	var cells = new Array(rows);
-	var lines = new Array(rows);
 	var div = $('#view');
 	var statusDiv = $('#status');
 	var messageDiv = $('#messages');
@@ -28,11 +27,6 @@ var VIEW = function(){
 			cells[i][j] = span;
 			span.text('\u00a0');
 			span.css("color", "#ffffff");
-			//if (i === 0 || j === 0 || i === rows-1 || j === cols-1) {
-			//	div.text("#").css("color", "#7f7f7f");
-			//} else {
-			//	div.text(".").css("color", "#ffffff");
-			//}
 			div.append(span);
 		}
 		div.append($('<br>'));
@@ -92,6 +86,7 @@ var VIEW = function(){
 			cells[i][cols-1].text("│");
 		}
 	}
+	drawBorders(Math.floor(2*cols/3), 3, rows-6);
 	
 	var Window = function(left, top, width, height){
 		this.x = left;
@@ -119,16 +114,9 @@ var VIEW = function(){
 				cells[y+this.y][x+this.x].css("color", color);
 			}
 		}
-		
-		this.drawText = function(x, y, text){
-			var i;
-			text = String(text);
-			for (i = 0; i < text.length; i++){
-				this.setText(x+i%this.width, y+Math.floor(i/this.width), text.charAt(i));
-			}
-			messageDiv.prepend(text + '<br />');
-		}
 	}
+	
+	var mapWindow = new Window(1, 1, Math.floor(2*cols/3)-1, rows-2);
 	
 	var updateStatus = function(text){
 		statusDiv.text(text);
@@ -160,8 +148,7 @@ var VIEW = function(){
 			black:"#000000"},
 		rows:rows,
 		cols:cols,
-		drawBorders:drawBorders,
-		Window:Window,
+		mapWindow:mapWindow,
 		updateStatus:updateStatus,
 		bufferMessage:bufferMessage,
 		appendMessages:appendMessages
