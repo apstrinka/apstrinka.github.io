@@ -10,7 +10,8 @@ var main = function() {
 	  } else {
 			var radAngle = Math.PI * angle / 180;
 	    var eccentricity = Math.sqrt(Math.pow((distance*speed*speed/(g*mass) - 1)*Math.sin(radAngle), 2) + Math.pow(Math.cos(radAngle), 2));
-      $('.result').text(eccentricity);
+			var semiMajorAxis = 1 / (2/distance - speed*speed / (g * mass));
+      $('.result').text('Eccentricity: ' + eccentricity + '<br />Semimajor Axis: ' + semiMajorAxis);
 	}
   });
 }
