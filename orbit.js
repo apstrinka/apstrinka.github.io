@@ -11,7 +11,14 @@ var main = function() {
 			var radAngle = Math.PI * angle / 180;
 	    var eccentricity = Math.sqrt(Math.pow((distance*speed*speed/(g*mass) - 1)*Math.sin(radAngle), 2) + Math.pow(Math.cos(radAngle), 2));
 			var semiMajorAxis = 1 / (2/distance - speed*speed / (g * mass));
-      $('.result').text('Eccentricity: ' + eccentricity + '<br />Semimajor Axis: ' + semiMajorAxis);
+			var c = 2*g*mass/(distance*speed*speed);
+			console.log(c);
+			var periapsis = distance*(-c-Math.sqrt(c*c+4*(1-c)*Math.pow(Math.sin(radAngle),2)))/(2*(1-c))
+			var apoapsis = distance*(-c+Math.sqrt(c*c+4*(1-c)*Math.pow(Math.sin(radAngle),2)))/(2*(1-c))
+			$('.eccentricity').text(eccentricity);
+      $('.semimajoraxis').text(semiMajorAxis);
+			$('.periapsis').text(periapsis);
+			$('.apoapsis').text(apoapsis);
 	}
   });
 }
