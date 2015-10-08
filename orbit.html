@@ -2,23 +2,23 @@
 <html>
   <head>
     <title>Orbits</title>
+		<link href="lib/bootstrap.min.css" rel="stylesheet">
   </head>
   <body>
-    <center>
-	  <h2>Orbits</h2>
-	  <p>Planet Mass: <input type="number" class="mass" value="6e24"> kg</p>
-    <p>Distance: <input type="number" class="distance" value="7e6"> m</p>
-	  <p>Speed: <input type="number" class="speed" value="7561"> m/s</p>
-		<p>Angle: <input type="number" class="angle" value="90"> degrees</p>
-	  <button class="btn">Calculate</button>
-	  <h3>Result</h3>
-	  <p>Eccentricity: <span class="eccentricity"></span></p>
-		<p>Semimajor Axis: <span class="semimajoraxis"></span></p>
-		<p>Periapsis: <span class="periapsis"></span></p>
-		<p>Apoapsis: <span class="apoapsis"></span></p>
-	</center>
+    <div id="viewportFrame" class="col-xs-9"></div>
+		<div class="col-xs-3">
+			<h2 style="color: #ffffff">Orbits</h2>
+			<p style="color: #ffffff">Planet Mass: <input type="number" id="mass" class="parameter" value="6e24" style="color: #000000"> kg</p>
+			<p style="color: #ffffff">Distance: <input type="number" id="distance" class="parameter" value="7e6" style="color: #000000"> m</p>
+			<p style="color: #ffffff">Speed: <input type="number" id="speed" class="parameter" value="7561" style="color: #000000"> m/s</p>
+			<p style="color: #ffffff">Angle: <input type="number" id="angle" class="parameter" value="90" style="color: #000000"> degrees</p>
+			<button id="zoomIn" class="btn">Zoom In</button>
+			<button id="zoomOut" class="btn">Zoom Out</button>
+			<!--button id="btn" class="btn btn-primary">Calculate</button-->
+		</div>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<script src="lib/three.min.js"></script>
     <script src="orbit.js"></script>
   </body>
 </html>
