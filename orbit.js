@@ -6,6 +6,7 @@ $(document).ready(function() {
 		camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1e100 );
 		camera.position.z = 10485760;
 		renderer = new THREE.WebGLRenderer();
+		renderer.setClearColor( 0x000000, 1 );
 		renderer.setSize( window.innerWidth, window.innerHeight );
 		$('#viewportFrame').append( renderer.domElement );
 	
@@ -39,7 +40,28 @@ $(document).ready(function() {
 				hypAnomaly = -hypAnomaly;
 			initMeanAnomaly = eccentricity*Math.sinh(hypAnomaly) - hypAnomaly;
 		}
-		console.log('initMeanAnomaly: ' + initMeanAnomaly);
+	}
+	
+	var getHyperbolaPoints = function(a, e, cX, cY, theta){
+		var numPoints = 100;
+		var step = .1;
+		var b = Math.sqrt(a*a*(e*e-1));
+		var pts = [];
+		var n, t, x, y;
+		for (n = -numPoints/2; n <= numPoints/2; n++){
+			t = n*step;
+			x = cX + a*Math.cosh(t);
+			y = cY + b*Math.sinh(t);
+			if (theta !== 0){
+				var cos = Math.cos( theta );
+				var sin = Math.sin( theta );
+				var tx = x, ty = y;
+				x = (tx - cX)*cos - (ty - cY)*sin + cX;
+				y = (tx - cX)*sin + (ty - cY)*cos + cY;
+			}
+			pts.push(new THREE.Vector2(x, y));
+		}
+		return pts;
 	}
 	
 	var calcAndDrawOrbit = function(){
@@ -78,18 +100,24 @@ $(document).ready(function() {
 				);
 				path = new THREE.Path( curve.getPoints( 50 ) );
 				geometry = path.createPointsGeometry( 50 );
-				material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-				orbitPath = new THREE.Line( geometry, material );
-				scene.add(orbitPath);
 			} else {
-				nu = Math.acos((semiMajorAxis*(1-eccentricitySqrd) - distance)/(eccentricity*distance));
+				var cosNu = (semiMajorAxis*(1-eccentricitySqrd) - distance)/(eccentricity*distance);
+				if (cosNu > 1)
+					cosNu = 1;
+				if (cosNu < -1)
+					cosNu = -1;
+				nu = Math.acos(cosNu);
 				if (radAngle > Math.PI/2 && radAngle < 3*Math.PI/2)
 					nu = -nu;
-				console.log('nu: ' + nu);
 				periapsisAngle = shipAngle - nu;
-				console.log('peripasis: ' + periapsisAngle);
 				setInitMeanAnomaly(nu);
+				
+				path = new THREE.Path(getHyperbolaPoints(semiMajorAxis, eccentricity, -semiMajorAxis*eccentricity*Math.cos(periapsisAngle), -semiMajorAxis*eccentricity*Math.sin(periapsisAngle), periapsisAngle));
+				geometry = path.createPointsGeometry( 100 );
 			}
+			material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+			orbitPath = new THREE.Line( geometry, material );
+			scene.add(orbitPath);
 			renderer.render(scene, camera);
 	  }
   }
