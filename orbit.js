@@ -1,5 +1,5 @@
 $(document).ready(function() {
-	var scene, camera, renderer, ship, orbitPath, semiMajorAxis, eccentricity, periapsisAngle, shipAngle, initMeanAnomaly, clock, timeWarp;
+	var scene, camera, renderer, ship, orbitPath, semiMajorAxis, eccentricity, periapsisAngle, shipAngle, initMeanAnomaly, clock, timeWarp, time;
 	
 	var init = function(){
 		scene = new THREE.Scene();
@@ -164,13 +164,13 @@ $(document).ready(function() {
 		return newtonsMethod(f, df, guess);
 	}
 	
-	var updateShipPos = function(time){
+	var updateShipPos = function(){
 		var g = 6.67e-11;
 	  var mass = parseFloat($('#mass').val());
 		var meanAnomaly;
 		var nu;
 		if (eccentricity < 1){ //Elliptical orbit
-			meanAnomaly = Math.sqrt(g*mass/Math.pow(semiMajorAxis, 3)) * time * timeWarp + initMeanAnomaly;
+			meanAnomaly = Math.sqrt(g*mass/Math.pow(semiMajorAxis, 3)) * time + initMeanAnomaly;
 			if (eccentricity < 0.03){ //This is an approximation that only works when e is small, I chose 0.03 as an arbitrary threshold
 				nu = meanAnomaly + 2*eccentricity*Math.sin(meanAnomaly) + 1.25*Math.pow(eccentricity, 2)*Math.sin(2*meanAnomaly);
 			} else {
@@ -183,7 +183,7 @@ $(document).ready(function() {
 					nu = 2*Math.PI - nu;
 			}
 		} else { //Hyperbolic orbit
-			meanAnomaly = Math.sqrt(-g*mass/Math.pow(semiMajorAxis, 3)) * time * timeWarp + initMeanAnomaly;
+			meanAnomaly = Math.sqrt(-g*mass/Math.pow(semiMajorAxis, 3)) * time + initMeanAnomaly;
 			var hypAnomaly = calcHyperbolicAnomaly(meanAnomaly);
 			nu = Math.acos((Math.cosh(hypAnomaly) - eccentricity) / (1 - eccentricity*Math.cosh(hypAnomaly)));
 			if (hypAnomaly < 0)
@@ -203,9 +203,10 @@ $(document).ready(function() {
 	}
 	
 	var	animate = function(){
-		if (timeWarp > 0){
+		if (timeWarp !== 0){
 			requestAnimationFrame(animate);
-			updateShipPos(clock.getElapsedTime());
+			time = time + clock.getDelta()*timeWarp;
+			updateShipPos();
 			renderer.render(scene, camera);
 		}
 	}
@@ -236,6 +237,7 @@ $(document).ready(function() {
 		renderer.render(scene, camera);
 	});
 	$('#start').click(function(){
+		time = 0;
 		timeWarp = 100;
 		clock = new THREE.Clock(true);
 		$('#mass').prop("disabled", true);
@@ -244,7 +246,11 @@ $(document).ready(function() {
 		$('#angle').prop("disabled", true);
 		$('#start').hide();
 		$('#stop').show();
-		animate(clock);
+		$('#fastback').show();
+		$('#slowback').show();
+		$('#slowforward').show();
+		$('#fastforward').show();
+		animate();
 	});
 	$('#stop').click(function() {
 		timeWarp = 0;
@@ -255,5 +261,33 @@ $(document).ready(function() {
 		$('#angle').prop("disabled", false);
 		$('#start').show();
 		$('#stop').hide();
+		$('#fastback').hide();
+		$('#slowback').hide();
+		$('#slowforward').hide();
+		$('#fastforward').hide();
+	});
+	$('#fastback').click(function() {
+		if (timeWarp > 0)
+			timeWarp = -timeWarp;
+		else
+			timeWarp = timeWarp*2;
+	});
+	$('#slowback').click(function() {
+		if (timeWarp > 0)
+			timeWarp = -timeWarp;
+		else
+			timeWarp = timeWarp/2;
+	});
+	$('#slowforward').click(function() {
+		if (timeWarp < 0)
+			timeWarp = -timeWarp;
+		else
+			timeWarp = timeWarp/2;
+	});
+	$('#fastforward').click(function() {
+		if (timeWarp < 0)
+			timeWarp = -timeWarp;
+		else
+			timeWarp = timeWarp*2;
 	});
 });
