@@ -1,3 +1,5 @@
+"use strict"
+
 $(document).ready(function() {
 	var scene, camera, renderer, ship, shipAngle, orbit, orbitPath, clock, timeWarp;
 	var time = 0;
@@ -33,24 +35,26 @@ $(document).ready(function() {
 	}
 	
 	Orbit.prototype.calcEccentricAnomaly = function(meanAnomaly){
+		var eccentricity = this.e;
 		var f = function(x){
-			return x - this.e*Math.sin(x) - meanAnomaly;
+			return x - eccentricity*Math.sin(x) - meanAnomaly;
 		}
 		
 		var df = function(x){
-			return 1 - this.e*Math.cos(x);
+			return 1 - eccentricity*Math.cos(x);
 		}
 		
 		return UTIL.newtonsMethod(f, df, meanAnomaly);
 	}
 	
 	Orbit.prototype.calcHyperbolicAnomaly = function(meanAnomaly){
+		var eccentricity = this.e;
 		var f = function(x){
-			return this.e*Math.sinh(x) - x - meanAnomaly;
+			return eccentricity*Math.sinh(x) - x - meanAnomaly;
 		}
 		
 		var df = function(x){
-			return this.e*Math.cosh(x) - 1;
+			return eccentricity*Math.cosh(x) - 1;
 		}
 		
 		var guess = meanAnomaly;
@@ -69,7 +73,7 @@ $(document).ready(function() {
 			if (this.e < 0.03){ //This is an approximation that only works when e is small, I chose 0.03 as an arbitrary threshold
 				nu = meanAnomaly + 2*this.e*Math.sin(meanAnomaly) + 1.25*Math.pow(this.e, 2)*Math.sin(2*meanAnomaly);
 			} else {
-				var eccAnomaly = calcEccentricAnomaly(meanAnomaly);
+				var eccAnomaly = this.calcEccentricAnomaly(meanAnomaly);
 				eccAnomaly = UTIL.unsignedModulo(eccAnomaly, 2*Math.PI);
 				nu = Math.acos((Math.cos(eccAnomaly) - this.e) / (1 - this.e*Math.cos(eccAnomaly)));
 				if (eccAnomaly > Math.PI)
@@ -77,7 +81,7 @@ $(document).ready(function() {
 			}
 		} else { //Hyperbolic orbit
 			meanAnomaly = Math.sqrt(-g*mass/Math.pow(this.a, 3)) * t + this.M0;
-			var hypAnomaly = calcHyperbolicAnomaly(meanAnomaly);
+			var hypAnomaly = this.calcHyperbolicAnomaly(meanAnomaly);
 			nu = Math.acos((Math.cosh(hypAnomaly) - this.e) / (1 - this.e*Math.cosh(hypAnomaly)));
 			if (hypAnomaly < 0)
 				nu = -nu;
@@ -220,35 +224,6 @@ $(document).ready(function() {
 	  }
   }
 	
-	var calcEccentricAnomaly = function(meanAnomaly){
-		var f = function(x){
-			return x - eccentricity*Math.sin(x) - meanAnomaly;
-		}
-		
-		var df = function(x){
-			return 1 - eccentricity*Math.cos(x);
-		}
-		
-		return UTIL.newtonsMethod(f, df, meanAnomaly);
-	}
-	
-	var calcHyperbolicAnomaly = function(meanAnomaly){
-		var f = function(x){
-			return eccentricity*Math.sinh(x) - x - meanAnomaly;
-		}
-		
-		var df = function(x){
-			return eccentricity*Math.cosh(x) - 1;
-		}
-		
-		var guess = meanAnomaly;
-		if (meanAnomaly > 2)
-			guess = Math.log(meanAnomaly);
-		else if (meanAnomaly < -2)
-			guess = -Math.log(-meanAnomaly);
-		return UTIL.newtonsMethod(f, df, guess);
-	}
-	
 	var updateShipPos = function(){
 	  var mass = parseFloat($('#mass').val());
 		var meanAnomaly;
@@ -258,15 +233,16 @@ $(document).ready(function() {
 			if (orbit.e < 0.03){ //This is an approximation that only works when e is small, I chose 0.03 as an arbitrary threshold
 				nu = meanAnomaly + 2*orbit.e*Math.sin(meanAnomaly) + 1.25*Math.pow(orbit.e, 2)*Math.sin(2*meanAnomaly);
 			} else {
-				var eccAnomaly = calcEccentricAnomaly(meanAnomaly);
+				var eccAnomaly = orbit.calcEccentricAnomaly(meanAnomaly);
 				eccAnomaly = UTIL.unsignedModulo(eccAnomaly, 2*Math.PI);
+				console.log('eccAnomaly=' + eccAnomaly);
 				nu = Math.acos((Math.cos(eccAnomaly) - orbit.e) / (1 - orbit.e*Math.cos(eccAnomaly)));
 				if (eccAnomaly > Math.PI)
 					nu = 2*Math.PI - nu;
 			}
 		} else { //Hyperbolic orbit
 			meanAnomaly = Math.sqrt(-g*mass/Math.pow(orbit.a, 3)) * time + orbit.M0;
-			var hypAnomaly = calcHyperbolicAnomaly(meanAnomaly);
+			var hypAnomaly = orbit.calcHyperbolicAnomaly(meanAnomaly);
 			nu = Math.acos((Math.cosh(hypAnomaly) - orbit.e) / (1 - orbit.e*Math.cosh(hypAnomaly)));
 			if (hypAnomaly < 0)
 				nu = -nu;
