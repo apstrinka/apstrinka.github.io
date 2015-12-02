@@ -103,13 +103,16 @@ $(document).ready(function() {
 		renderer.setSize( window.innerWidth, window.innerHeight );
 		$('#viewportFrame').append( renderer.domElement );
 	
+		THREE.ImageUtils.crossOrigin = '';
+		var texture = THREE.ImageUtils.loadTexture('images/land_ocean_ice_cloud_2048.jpg');
+		var material = new THREE.MeshBasicMaterial( { map: texture });
 		var geometry = new THREE.SphereGeometry( 5e6, 100, 100 );
-		var greenMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-		var redMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-		var planet = new THREE.Mesh( geometry, greenMaterial );
+		//var greenMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+		var planet = new THREE.Mesh( geometry, material );
 		scene.add( planet );
 	
 		geometry = new THREE.SphereGeometry(1e5);
+		var redMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 		ship = new THREE.Mesh(geometry, redMaterial);
 		ship.position.x = 1;
 		scene.add(ship);
@@ -272,13 +275,13 @@ $(document).ready(function() {
 	$('.parameter').change(calcAndDrawOrbit);
 	$('#zoomIn').click(function(){
 		camera.position.z = camera.position.z/2;
-		ship.scale = ship.scale.divideScalar(2);
+		//ship.scale = ship.scale.divideScalar(2);
 		console.log(camera.position.z);
 		renderer.render(scene, camera);
 	});
 	$('#zoomOut').click(function(){
 		camera.position.z = camera.position.z*2;
-		ship.scale = ship.scale.multiplyScalar(2);
+		//ship.scale = ship.scale.multiplyScalar(2);
 		console.log(camera.position.z);
 		renderer.render(scene, camera);
 	});
