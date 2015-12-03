@@ -117,6 +117,8 @@ $(document).ready(function() {
 		ship.position.x = 1;
 		scene.add(ship);
 		
+		renderer.render(scene, camera);
+		
 		shipAngle = 0;
 	};
 	
