@@ -1,7 +1,7 @@
 "use strict"
 
 $(document).ready(function() {
-	var scene, camera, renderer, ship, shipAngle, orbit, orbitPath, clock, timeWarp;
+	var scene, camera, renderer, ship, shipAngle, planet, orbit, orbitPath, clock, timeWarp;
 	var time = 0;
 	var g = 6.67e-11;
 	
@@ -104,11 +104,13 @@ $(document).ready(function() {
 		$('#viewportFrame').append( renderer.domElement );
 	
 		THREE.ImageUtils.crossOrigin = '';
-		var texture = THREE.ImageUtils.loadTexture('images/land_ocean_ice_cloud_2048.jpg');
+		var texture = THREE.ImageUtils.loadTexture('images/earthmap10k.reduced.jpg');
+		//Moon: http://i.imgur.com/jXVhHDJ.jpg 
+		//Earth: http://i.imgur.com/obYIPJR.jpg
 		var material = new THREE.MeshBasicMaterial( { map: texture });
 		var geometry = new THREE.SphereGeometry( 5e6, 100, 100 );
 		//var greenMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-		var planet = new THREE.Mesh( geometry, material );
+		planet = new THREE.Mesh( geometry, material );
 		scene.add( planet );
 	
 		geometry = new THREE.SphereGeometry(1e5);
@@ -268,8 +270,10 @@ $(document).ready(function() {
 	var	animate = function(){
 		if (timeWarp !== 0){
 			requestAnimationFrame(animate);
-			time = time + clock.getDelta()*timeWarp;
+			var delta = clock.getDelta();
+			time = time + delta*timeWarp;
 			updateShipPos();
+			planet.rotateOnAxis(new THREE.Vector3(0, 1, 0), delta*timeWarp*Math.PI/43200);
 			renderer.render(scene, camera);
 		}
 	}
