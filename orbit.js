@@ -1,7 +1,7 @@
 "use strict"
 
 $(document).ready(function() {
-	var scene, camera, renderer, ship, shipAngle, planet, orbit, orbitPath, clock, timeWarp;
+	var scene, cam, renderer, ship, shipAngle, planet, orbit, orbitPath, clock, timeWarp;
 	var time = 0;
 	var g = 6.67e-11;
 	
@@ -96,15 +96,26 @@ $(document).ready(function() {
 	
 	var init = function(){
 		scene = new THREE.Scene();
-		camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1e100 );
-		camera.position.z = 10485760;
+		cam = {
+			camera: new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1e100 ),
+			dist: 10485760,
+			theta: Math.PI/2,
+			phi: Math.PI/2,
+			setCameraPosition: function(){
+				this.camera.position.setX(this.dist*Math.sin(this.theta)*Math.cos(this.phi));
+				this.camera.position.setZ(this.dist*Math.sin(this.theta)*Math.sin(this.phi));
+				this.camera.position.setY(this.dist*Math.cos(this.theta));
+				this.camera.lookAt(new THREE.Vector3(0, 0, 0))
+			}
+		};
+		cam.setCameraPosition();
 		renderer = new THREE.WebGLRenderer();
 		renderer.setClearColor( 0x000000, 1 );
 		renderer.setSize( window.innerWidth, window.innerHeight );
 		$('#viewportFrame').append( renderer.domElement );
 	
 		THREE.ImageUtils.crossOrigin = '';
-		var texture = THREE.ImageUtils.loadTexture('images/earthmap10k.reduced.jpg');
+		var texture = THREE.ImageUtils.loadTexture('http://i.imgur.com/obYIPJR.jpg');
 		//Moon: http://i.imgur.com/jXVhHDJ.jpg 
 		//Earth: http://i.imgur.com/obYIPJR.jpg
 		var material = new THREE.MeshBasicMaterial( { map: texture });
@@ -119,7 +130,7 @@ $(document).ready(function() {
 		ship.position.x = 1;
 		scene.add(ship);
 		
-		renderer.render(scene, camera);
+		renderer.render(scene, cam.camera);
 		
 		shipAngle = 0;
 	};
@@ -215,7 +226,7 @@ $(document).ready(function() {
 		material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
 		orbitPath = new THREE.Line( geometry, material );
 		scene.add(orbitPath);
-		renderer.render(scene, camera);
+		renderer.render(scene, cam.camera);
 	}
 	
 	var calcAndDrawOrbit = function(){
@@ -274,22 +285,22 @@ $(document).ready(function() {
 			time = time + delta*timeWarp;
 			updateShipPos();
 			planet.rotateOnAxis(new THREE.Vector3(0, 1, 0), delta*timeWarp*Math.PI/43200);
-			renderer.render(scene, camera);
+			renderer.render(scene, cam.camera);
 		}
 	}
 	
 	$('.parameter').change(calcAndDrawOrbit);
 	$('#zoomIn').click(function(){
-		camera.position.z = camera.position.z/2;
+		cam.dist = cam.dist/2;
+		cam.setCameraPosition();
 		//ship.scale = ship.scale.divideScalar(2);
-		console.log(camera.position.z);
-		renderer.render(scene, camera);
+		renderer.render(scene, cam.camera);
 	});
 	$('#zoomOut').click(function(){
-		camera.position.z = camera.position.z*2;
+		cam.dist = cam.dist*2;
+		cam.setCameraPosition();
 		//ship.scale = ship.scale.multiplyScalar(2);
-		console.log(camera.position.z);
-		renderer.render(scene, camera);
+		renderer.render(scene, cam.camera);
 	});
 	$('#start').click(function(){
 		timeWarp = 100;
@@ -342,6 +353,29 @@ $(document).ready(function() {
 			timeWarp = -timeWarp;
 		else
 			timeWarp = timeWarp*2;
+	});
+	$(document).keydown(function(event){
+		if (event.which === 37){       // left arrow
+			cam.phi = cam.phi - Math.PI/16;
+			cam.setCameraPosition();
+			renderer.render(scene, cam.camera);
+		} else if (event.which == 38){ // up arrow
+			cam.theta = cam.theta - Math.PI/16;
+			if (cam.theta < 0)
+				cam.theta = 0;
+			cam.setCameraPosition();
+			renderer.render(scene, cam.camera);
+		} else if (event.which == 39){ // right arrow
+			cam.phi = cam.phi + Math.PI/16;
+			cam.setCameraPosition();
+			renderer.render(scene, cam.camera);
+		} else if (event.which == 40){ // down arrow
+			cam.theta = cam.theta + Math.PI/16;
+			if (cam.theta > Math.PI)
+				cam.theta = Math.PI;
+			cam.setCameraPosition();
+			renderer.render(scene, cam.camera);
+		}
 	});
 	
 	init();
