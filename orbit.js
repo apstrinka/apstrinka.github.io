@@ -6,14 +6,18 @@ $(document).ready(function() {
 	var g = 6.67e-11;
 	
 	var UTIL = {
-		newtonsMethod: function(f, df, x){
-			var epsilon = .00001;
+		newtonsMethod: function(f, df, x, maxStep){
+			var epsilon = .0001;
 			var maxIter = 10;
 			var iter = 0;
 			var y = f(x);
 			while (Math.abs(y) > epsilon && iter < maxIter){
 				iter = iter + 1;
-				x = x - y/df(x);
+				var step = y/df(x);
+				if (maxStep > 0 && Math.abs(step) > maxStep){
+					step = Math.sign(step)*maxStep;
+				}
+				x = x - step;
 				y = f(x);
 			}
 			return x;
@@ -44,7 +48,7 @@ $(document).ready(function() {
 			return 1 - eccentricity*Math.cos(x);
 		}
 		
-		return UTIL.newtonsMethod(f, df, meanAnomaly);
+		return UTIL.newtonsMethod(f, df, meanAnomaly, Math.PI);
 	}
 	
 	Orbit.prototype.calcHyperbolicAnomaly = function(meanAnomaly){
@@ -62,7 +66,7 @@ $(document).ready(function() {
 			guess = Math.log(meanAnomaly);
 		else if (meanAnomaly < -2)
 			guess = -Math.log(-meanAnomaly);
-		return UTIL.newtonsMethod(f, df, guess);
+		return UTIL.newtonsMethod(f, df, guess, 0);
 	}
 	
 	Orbit.prototype.getTrueAnomaly = function(t){
@@ -251,9 +255,10 @@ $(document).ready(function() {
 			if (orbit.e < 0.03){ //This is an approximation that only works when e is small, I chose 0.03 as an arbitrary threshold
 				nu = meanAnomaly + 2*orbit.e*Math.sin(meanAnomaly) + 1.25*Math.pow(orbit.e, 2)*Math.sin(2*meanAnomaly);
 			} else {
+				//console.log('meanAnomaly=' + meanAnomaly);
 				var eccAnomaly = orbit.calcEccentricAnomaly(meanAnomaly);
 				eccAnomaly = UTIL.unsignedModulo(eccAnomaly, 2*Math.PI);
-				console.log('eccAnomaly=' + eccAnomaly);
+				//console.log('eccAnomaly=' + eccAnomaly);
 				nu = Math.acos((Math.cos(eccAnomaly) - orbit.e) / (1 - orbit.e*Math.cos(eccAnomaly)));
 				if (eccAnomaly > Math.PI)
 					nu = 2*Math.PI - nu;
@@ -283,12 +288,22 @@ $(document).ready(function() {
 			requestAnimationFrame(animate);
 			var delta = clock.getDelta();
 			time = time + delta*timeWarp;
+			$('#time').val(time);
 			updateShipPos();
 			planet.rotateOnAxis(new THREE.Vector3(0, 1, 0), delta*timeWarp*Math.PI/43200);
 			renderer.render(scene, cam.camera);
 		}
 	}
 	
+	$('#time').change(function(){
+		time = parseFloat($('#time').val());
+		if (isNaN(time)){
+			time = 0;
+			$('#time').val(0);
+		}
+		updateShipPos();
+		renderer.render(scene, cam.camera);
+	});
 	$('.parameter').change(calcAndDrawOrbit);
 	$('#zoomIn').click(function(){
 		cam.dist = cam.dist/2;
