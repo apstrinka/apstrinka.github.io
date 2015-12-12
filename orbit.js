@@ -1,7 +1,7 @@
 "use strict"
 
 $(document).ready(function() {
-	var scene, cam, renderer, ship, shipAngle, planet, orbit, orbitPath, clock, timeWarp;
+	var scene, cam, renderer, ship, shipAngle, planet, orbit, orbitPath, clock, timeWarp, mouseX, mouseY, isDragging;
 	var time = 0;
 	var g = 6.67e-11;
 	
@@ -369,28 +369,38 @@ $(document).ready(function() {
 		else
 			timeWarp = timeWarp*2;
 	});
-	$(document).keydown(function(event){
-		if (event.which === 37){       // left arrow
-			cam.phi = cam.phi - Math.PI/16;
-			cam.setCameraPosition();
-			renderer.render(scene, cam.camera);
-		} else if (event.which == 38){ // up arrow
-			cam.theta = cam.theta - Math.PI/16;
-			if (cam.theta < 0)
-				cam.theta = 0;
-			cam.setCameraPosition();
-			renderer.render(scene, cam.camera);
-		} else if (event.which == 39){ // right arrow
-			cam.phi = cam.phi + Math.PI/16;
-			cam.setCameraPosition();
-			renderer.render(scene, cam.camera);
-		} else if (event.which == 40){ // down arrow
-			cam.theta = cam.theta + Math.PI/16;
+	$(document).mousedown(function(event){
+		mouseX = event.pageX;
+		mouseY = event.pageY;
+		isDragging = true;
+	});
+	$(document).mouseup(function(event){
+		isDragging = false;
+	});
+	$(document).mousemove(function(event){
+		if (isDragging){
+			var diffX = event.pageX - mouseX;
+			var diffY = event.pageY - mouseY;
+			cam.phi = cam.phi + .005*diffX;
+			cam.theta = cam.theta - .005*diffY;
+			if (cam.theta < .00001)
+				cam.theta = .00001;
 			if (cam.theta > Math.PI)
 				cam.theta = Math.PI;
 			cam.setCameraPosition();
 			renderer.render(scene, cam.camera);
+			mouseX = event.pageX;
+			mouseY = event.pageY;
 		}
+	});
+	$(document).mousewheel(function(event){
+		if(event.deltaY < 0){
+			cam.dist = cam.dist*Math.SQRT2;
+		} else if (event.deltaY > 0){
+			cam.dist = cam.dist/Math.SQRT2;
+		}
+		cam.setCameraPosition();
+		renderer.render(scene, cam.camera);
 	});
 	
 	init();

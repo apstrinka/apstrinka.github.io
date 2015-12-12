@@ -4,7 +4,7 @@
     <title>Orbits</title>
 		<link href="lib/bootstrap.min.css" rel="stylesheet">
   </head>
-  <body style="overflow: hidden;">
+  <body style="overflow: hidden;" oncontextmenu="return false;">
     <div id="viewportFrame"></div>
 		<div style="position: absolute; right: 1em; top: 1em;">
 			<h2 style="color: #ffffff">Orbits</h2>
@@ -26,7 +26,8 @@
 			<button id="fastforward" class="btn btn-primary" style="display: none">&gt;&gt;</button>
 		</div>
 
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script src="lib/jquery.mousewheel.min.js"></script>
 		<script src="lib/three.min.js"></script>
     <script src="orbit.js"></script>
   </body>
