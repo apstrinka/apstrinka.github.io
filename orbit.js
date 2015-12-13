@@ -210,7 +210,7 @@ $(document).ready(function() {
 	var drawOrbit = function(orbit, distance){
 		var curve, path, geometry, material;
 		ship.position.x = distance*Math.cos(shipAngle);
-		ship.position.y = distance*Math.sin(shipAngle);
+		ship.position.z = -distance*Math.sin(shipAngle);
 		if (orbit.e < 1){
 			var semiMinorAxis = orbit.a*Math.sqrt(1-orbit.e*orbit.e);
 			var f = orbit.e*orbit.a;
