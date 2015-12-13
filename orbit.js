@@ -103,7 +103,7 @@ $(document).ready(function() {
 		cam = {
 			camera: new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1e100 ),
 			dist: 10485760,
-			theta: Math.PI/2,
+			theta: .00001,
 			phi: Math.PI/2,
 			setCameraPosition: function(){
 				this.camera.position.setX(this.dist*Math.sin(this.theta)*Math.cos(this.phi));
@@ -229,7 +229,13 @@ $(document).ready(function() {
 		}
 		material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
 		orbitPath = new THREE.Line( geometry, material );
+		orbitPath.rotateOnAxis(new THREE.Vector3(1, 0, 0), -Math.PI/2);
 		scene.add(orbitPath);
+		
+		$('#eccentricity').val(orbit.e);
+		$('#semimajoraxis').val(orbit.a);
+		$('#periapsisangle').val(orbit.periAng);
+		
 		renderer.render(scene, cam.camera);
 	}
 	
@@ -274,7 +280,7 @@ $(document).ready(function() {
 		var dist = orbit.a*(1-Math.pow(orbit.e, 2)) / (1 + orbit.e*Math.cos(nu));
 		shipAngle = nu + orbit.periAng;
 		ship.position.x = dist*Math.cos(shipAngle);
-		ship.position.y = dist*Math.sin(shipAngle);
+		ship.position.z = -dist*Math.sin(shipAngle);
 		$('#distance').val(dist);
 		var speed = Math.sqrt(g*mass*(2/dist - 1/orbit.a));
 		$('#speed').val(speed);
@@ -369,15 +375,15 @@ $(document).ready(function() {
 		else
 			timeWarp = timeWarp*2;
 	});
-	$(document).mousedown(function(event){
+	$('#viewportFrame').mousedown(function(event){
 		mouseX = event.pageX;
 		mouseY = event.pageY;
 		isDragging = true;
 	});
-	$(document).mouseup(function(event){
+	$('#viewportFrame').mouseup(function(event){
 		isDragging = false;
 	});
-	$(document).mousemove(function(event){
+	$('#viewportFrame').mousemove(function(event){
 		if (isDragging){
 			var diffX = event.pageX - mouseX;
 			var diffY = event.pageY - mouseY;
@@ -393,7 +399,7 @@ $(document).ready(function() {
 			mouseY = event.pageY;
 		}
 	});
-	$(document).mousewheel(function(event){
+	$('#viewportFrame').mousewheel(function(event){
 		if(event.deltaY < 0){
 			cam.dist = cam.dist*Math.SQRT2;
 		} else if (event.deltaY > 0){
