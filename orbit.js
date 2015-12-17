@@ -260,6 +260,7 @@ $(document).ready(function() {
 		if (!isNaN(mass) && !isNaN(eccentricity) && !isNaN(semiMajorAxis) && !isNaN(periAng)){
 			scene.remove(orbitPath);
 			orbit = new Orbit(mass, eccentricity, semiMajorAxis, periAng, inclination, longAscNode, 0);
+			updateShipPos();
 			drawOrbit(orbit, distance);
 		}
 	}
@@ -273,12 +274,13 @@ $(document).ready(function() {
 		ship.position.x = coords.x;
 		ship.position.y = coords.y;
 		ship.position.z = coords.z;
-		$('#distance').val(dist);
 		var speed = Math.sqrt(g*mass*(2/dist - 1/orbit.a));
-		$('#speed').val(speed);
 		var angleRad = -Math.atan(orbit.e*Math.sin(nu)/(1 + orbit.e*Math.cos(nu))) + Math.PI/2;
 		var angle = 180 * angleRad / Math.PI;
+		$('#distance').val(dist);
+		$('#speed').val(speed);
 		$('#angle').val(angle);
+		$('#trueanomaly').val(nu);
 	}
 	
 	var	animate = function(){
