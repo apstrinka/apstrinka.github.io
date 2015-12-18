@@ -27,17 +27,40 @@ $(document).ready(function() {
 			if (x < 0)
 				x = x + b;
 			return x;
+		},
+		toDegrees: function(rad){
+			return rad*180/Math.PI;
+		},
+		toRadians: function(deg){
+			return deg*Math.PI/180;
 		}
 	};
 	
-	var Orbit = function(mass, eccentricity, semiMajorAxis, periapsisAngle, inclination, longAscNode, initMeanAnomaly){
+	var Orbit = function(mass, eccentricity, semiMajorAxis, periapsisAngle, inclination, longAscNode){
 		this.mass = mass;
 		this.e = eccentricity;
 		this.a = semiMajorAxis;
 		this.periAng = periapsisAngle;
 		this.i = inclination;
 		this.longAscNode = longAscNode;
-		this.M0 = initMeanAnomaly;
+		this.M0 = 0;
+	}
+
+	Orbit.prototype.setInitMeanAnomaly = function(nu, t){
+		var eccAnomaly, hypAnomaly, meanAnomaly;
+		if (this.e < 1){ //Eccentric orbit
+			eccAnomaly = Math.acos((this.e + Math.cos(nu))/(1 + this.e*Math.cos(nu)));
+			if (UTIL.unsignedModulo(nu, 2*Math.PI) > Math.PI)
+				eccAnomaly = 2*Math.PI - eccAnomaly;
+			meanAnomaly = eccAnomaly - this.e*Math.sin(eccAnomaly);
+			this.M0 = meanAnomaly - Math.sqrt(g*this.mass/Math.pow(this.a, 3)) * t;
+		} else { //Hyperbolic orbit
+			hypAnomaly = Math.acosh((this.e + Math.cos(nu))/(1 + this.e*Math.cos(nu)));
+			if (nu < 0)
+				hypAnomaly = -hypAnomaly;
+			meanAnomaly = this.e*Math.sinh(hypAnomaly) - hypAnomaly;
+			this.M0 = meanAnomaly - Math.sqrt(-g*this.mass/Math.pow(this.a, 3)) * t
+		}
 	}
 	
 	Orbit.prototype.calcEccentricAnomaly = function(meanAnomaly){
@@ -86,9 +109,14 @@ $(document).ready(function() {
 					nu = 2*Math.PI - nu;
 			}
 		} else { //Hyperbolic orbit
-			meanAnomaly = Math.sqrt(-g*mass/Math.pow(this.a, 3)) * t + this.M0;
+			meanAnomaly = Math.sqrt(-g*this.mass/Math.pow(this.a, 3)) * t + this.M0;
 			var hypAnomaly = this.calcHyperbolicAnomaly(meanAnomaly);
-			nu = Math.acos((Math.cosh(hypAnomaly) - this.e) / (1 - this.e*Math.cosh(hypAnomaly)));
+			if (Math.abs(Math.cosh(hypAnomaly) - this.e) > Math.abs(1 - this.e*Math.cosh(hypAnomaly))){
+				console.log('Impossible true anomaly');
+				nu = 0;
+			} else {
+				nu = Math.acos((Math.cosh(hypAnomaly) - this.e) / (1 - this.e*Math.cosh(hypAnomaly)));
+			}
 			if (hypAnomaly < 0)
 				nu = -nu;
 		}
@@ -172,18 +200,14 @@ $(document).ready(function() {
 		return pts;
 	}
 	
-	var calcOrbit = function(mass, distance, speed, angle){
-		var eccentricitySqrd, eccentricity, semiMajorAxis, nu, cosNu, periapsisAngle, eccAnomaly, hypAnomaly, initMeanAnomaly;
-		eccentricitySqrd = Math.pow((distance*speed*speed/(g*mass) - 1)*Math.sin(angle), 2) + Math.pow(Math.cos(angle), 2);
+	var calcOrbit = function(mass, distance, speed, zenithAngle){
+		var eccentricitySqrd, eccentricity, semiMajorAxis, nu, cosNu, periapsisAngle;
+		eccentricitySqrd = Math.pow((distance*speed*speed/(g*mass) - 1)*Math.sin(zenithAngle), 2) + Math.pow(Math.cos(zenithAngle), 2);
 		eccentricity = Math.sqrt(eccentricitySqrd);
 		semiMajorAxis = 1 / (2/distance - speed*speed / (g*mass));
 		if (eccentricitySqrd < 1){
-			nu = Math.atan2(Math.sin(angle)*Math.cos(angle), Math.pow(Math.sin(angle), 2) - g*mass/(distance*speed*speed));
-			periapsisAngle = shipAngle-nu;
-			eccAnomaly = Math.acos((eccentricity + Math.cos(nu))/(1+eccentricity*Math.cos(nu)));
-			if (nu > Math.PI)
-				eccAnomaly = - eccAnomaly;
-			initMeanAnomaly = eccAnomaly - eccentricity*Math.sin(eccAnomaly);
+			nu = Math.atan2(Math.sin(zenithAngle)*Math.cos(zenithAngle), Math.pow(Math.sin(zenithAngle), 2) - g*mass/(distance*speed*speed));
+			periapsisAngle = -nu;
 		} else {
 			cosNu = (semiMajorAxis*(1-eccentricitySqrd) - distance)/(eccentricity*distance);
 			if (cosNu > 1)
@@ -191,35 +215,31 @@ $(document).ready(function() {
 			if (cosNu < -1)
 				cosNu = -1;
 			nu = Math.acos(cosNu);
-			if (angle > Math.PI/2 && angle < 3*Math.PI/2)
+			if (zenithAngle > Math.PI/2 && zenithAngle < 3*Math.PI/2)
 				nu = -nu;
-			periapsisAngle = shipAngle - nu;
-			hypAnomaly = Math.acosh((eccentricity + Math.cos(nu))/(1+eccentricity*Math.cos(nu)));
-			if (nu > Math.PI)
-				hypAnomaly = -hypAnomaly;
-			initMeanAnomaly = eccentricity*Math.sinh(hypAnomaly) - hypAnomaly;
+			periapsisAngle = -nu;
 		}
-		return new Orbit(mass, eccentricity, semiMajorAxis, periapsisAngle, 0, 0, initMeanAnomaly);
+		var orbit = new Orbit(mass, eccentricity, semiMajorAxis, periapsisAngle, 0, 0);
+		orbit.setInitMeanAnomaly(nu, time);
+		return orbit;
 	}
 	
-	var drawOrbit = function(orbit, distance){
+	var drawOrbit = function(orbit){
 		var curve, path, geometry, material;
-		//ship.position.x = distance*Math.cos(shipAngle);
-		//ship.position.z = -distance*Math.sin(shipAngle);
 		if (orbit.e < 1){
 			var semiMinorAxis = orbit.a*Math.sqrt(1-orbit.e*orbit.e);
 			var f = orbit.e*orbit.a;
 			curve = new THREE.EllipseCurve(
-				-f*Math.cos(orbit.longAscNode),  -f*Math.sin(orbit.longAscNode),            // ax, aY
-				orbit.a, semiMinorAxis,           // xRadius, yRadius
-				0,  2 * Math.PI,  // aStartAngle, aEndAngle
-				false,            // aClockwise
-				orbit.longAscNode                 // aRotation 
+				-f*Math.cos(orbit.longAscNode), -f*Math.sin(orbit.longAscNode),	// ax, aY
+				orbit.a, semiMinorAxis,	// xRadius, yRadius
+				0,  2 * Math.PI,	// aStartAngle, aEndAngle
+				false,	// aClockwise
+				orbit.longAscNode	// aRotation 
 			);
 			path = new THREE.Path( curve.getPoints( 50 ) );
 			geometry = path.createPointsGeometry( 50 );
 		} else {
-			path = new THREE.Path(getHyperbolaPoints(orbit.a, orbit.e, -orbit.a*orbit.e*Math.cos(orbit.periAng), -orbit.a*orbit.e*Math.sin(orbit.periAng), orbit.periAng));
+			path = new THREE.Path(getHyperbolaPoints(orbit.a, orbit.e, -orbit.a*orbit.e*Math.cos(orbit.longAscNode), -orbit.a*orbit.e*Math.sin(orbit.longAscNode), orbit.longAscNode));
 			geometry = path.createPointsGeometry( 100 );
 		}
 		material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
@@ -229,26 +249,27 @@ $(document).ready(function() {
 		orbitPath.rotateOnAxis(new THREE.Vector3(0, 0, 1), orbit.periAng);
 		scene.add(orbitPath);
 		
-		$('#eccentricity').val(orbit.e);
-		$('#semimajoraxis').val(orbit.a);
-		$('#periapsisangle').val(orbit.periAng);
-		
 		renderer.render(scene, cam.camera);
 	}
 	
 	var calcAndDrawOrbit = function(){
-	  var mass = parseFloat($('#mass').val());
-	  var distance = parseFloat($('#distance').val());
+		var mass = parseFloat($('#mass').val());
+		var distance = parseFloat($('#distance').val());
 		var speed = parseFloat($('#speed').val());
-		var angle = parseFloat($('#angle').val());
-	  if (!isNaN(mass) && !isNaN(distance) && !isNaN(speed) && !isNaN(angle)){
+		var zenithAngle = parseFloat($('#zenithangle').val());
+		if (!isNaN(mass) && !isNaN(distance) && !isNaN(speed) && !isNaN(zenithAngle)){
 			scene.remove(orbitPath);
-			var radAngle = Math.PI * angle / 180;
-			orbit = calcOrbit(mass, distance, speed, radAngle);
+			zenithAngle = UTIL.toRadians(zenithAngle);
+			orbit = calcOrbit(mass, distance, speed, zenithAngle);
 			updateShipPos();
-			drawOrbit(orbit, 0);
-	  }
-  }
+			drawOrbit(orbit);
+		}
+		$('#eccentricity').val(orbit.e);
+		$('#semimajoraxis').val(orbit.a);
+		$('#periapsisangle').val(UTIL.toDegrees(orbit.periAng));
+		$('#inclination').val(UTIL.toDegrees(orbit.i));
+		$('#longascnode').val(UTIL.toDegrees(orbit.longAscNode));
+	}
 	
 	var calcAndDrawOrbit2 = function(){
 		var mass = parseFloat($('#mass').val());
@@ -257,16 +278,24 @@ $(document).ready(function() {
 		var periAng = parseFloat($('#periapsisangle').val());
 		var inclination = parseFloat($('#inclination').val());
 		var longAscNode = parseFloat($('#longascnode').val());
-		if (!isNaN(mass) && !isNaN(eccentricity) && !isNaN(semiMajorAxis) && !isNaN(periAng)){
+		var trueAnomaly = parseFloat($('#trueanomaly').val());
+		if (!isNaN(mass) && !isNaN(eccentricity) && !isNaN(semiMajorAxis) && !isNaN(periAng) && !isNaN(inclination) && !isNaN(longAscNode) && !isNaN(trueAnomaly)){
+			if ((eccentricity < 1 && semiMajorAxis < 0) || (eccentricity > 1 && semiMajorAxis > 0))
+				semiMajorAxis = -semiMajorAxis;
+			periAng = UTIL.toRadians(periAng);
+			inclination = UTIL.toRadians(inclination);
+			longAscNode = UTIL.toRadians(longAscNode);
+			trueAnomaly = UTIL.toRadians(trueAnomaly);
 			scene.remove(orbitPath);
-			orbit = new Orbit(mass, eccentricity, semiMajorAxis, periAng, inclination, longAscNode, 0);
+			orbit = new Orbit(mass, eccentricity, semiMajorAxis, periAng, inclination, longAscNode);
+			orbit.setInitMeanAnomaly(trueAnomaly, time);
 			updateShipPos();
-			drawOrbit(orbit, distance);
+			drawOrbit(orbit);
 		}
 	}
 	
 	var updateShipPos = function(){
-	  var mass = parseFloat($('#mass').val());
+		var mass = parseFloat($('#mass').val());
 		var meanAnomaly;
 		var nu = orbit.getTrueAnomaly(time);
 		var dist = orbit.a*(1-Math.pow(orbit.e, 2)) / (1 + orbit.e*Math.cos(nu));
@@ -280,7 +309,7 @@ $(document).ready(function() {
 		$('#distance').val(dist);
 		$('#speed').val(speed);
 		$('#angle').val(angle);
-		$('#trueanomaly').val(nu);
+		$('#trueanomaly').val(UTIL.toDegrees(nu));
 	}
 	
 	var	animate = function(){
