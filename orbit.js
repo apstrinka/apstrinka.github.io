@@ -159,6 +159,7 @@ $(document).ready(function() {
 	
 		THREE.ImageUtils.crossOrigin = '';
 		var texture = THREE.ImageUtils.loadTexture('http://i.imgur.com/obYIPJR.jpg');
+		texture.minFilter = THREE.LinearFilter;
 		//Moon: http://i.imgur.com/jXVhHDJ.jpg 
 		//Earth: http://i.imgur.com/obYIPJR.jpg
 		var material = new THREE.MeshBasicMaterial( { map: texture });
