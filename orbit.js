@@ -1,7 +1,7 @@
 "use strict"
 
 $(document).ready(function() {
-	var scene, cam, renderer, ship, shipAngle, planet, orbit, orbitPath, clock, timeWarp, mouseX, mouseY, isDragging;
+	var scene, cam, renderer, ship, shipTheta, shipPhi, planet, orbit, orbitPath, clock, timeWarp, mouseX, mouseY, isDragging;
 	var time = 0;
 	var g = 6.67e-11;
 	
@@ -55,7 +55,10 @@ $(document).ready(function() {
 			meanAnomaly = eccAnomaly - this.e*Math.sin(eccAnomaly);
 			this.M0 = meanAnomaly - Math.sqrt(g*this.mass/Math.pow(this.a, 3)) * t;
 		} else { //Hyperbolic orbit
-			hypAnomaly = Math.acosh((this.e + Math.cos(nu))/(1 + this.e*Math.cos(nu)));
+			if (Math.abs(this.e + Math.cos(nu)) > Math.abs(1 + this.e*Math.cos(nu)))
+				hypAnomaly = 0;
+			else
+				hypAnomaly = Math.acosh((this.e + Math.cos(nu))/(1 + this.e*Math.cos(nu)));
 			if (nu < 0)
 				hypAnomaly = -hypAnomaly;
 			meanAnomaly = this.e*Math.sinh(hypAnomaly) - hypAnomaly;
@@ -131,6 +134,8 @@ $(document).ready(function() {
 		if (l > Math.PI/2 && l < 3*Math.PI/2)
 			phi = Math.PI + phi;
 		return {
+			theta: theta,
+			phi: phi,
 			x: dist*Math.sin(theta)*Math.cos(phi),
 			y: dist*Math.cos(theta),
 			z: -dist*Math.sin(theta)*Math.sin(phi)
@@ -176,7 +181,8 @@ $(document).ready(function() {
 		
 		renderer.render(scene, cam.camera);
 		
-		shipAngle = 0;
+		shipTheta = 0;
+		shipPhi = Math.PI/2;
 	};
 	
 	var getHyperbolaPoints = function(a, e, cX, cY, theta){
@@ -201,14 +207,13 @@ $(document).ready(function() {
 		return pts;
 	}
 	
-	var calcOrbit = function(mass, distance, speed, zenithAngle){
-		var eccentricitySqrd, eccentricity, semiMajorAxis, nu, cosNu, periapsisAngle;
+	var calcOrbit = function(mass, distance, speed, zenithAngle, azimuthAngle){
+		var eccentricitySqrd, eccentricity, semiMajorAxis, nu, cosNu, periapsisAngle, inclination, longAscNode, lambda, l;
 		eccentricitySqrd = Math.pow((distance*speed*speed/(g*mass) - 1)*Math.sin(zenithAngle), 2) + Math.pow(Math.cos(zenithAngle), 2);
 		eccentricity = Math.sqrt(eccentricitySqrd);
 		semiMajorAxis = 1 / (2/distance - speed*speed / (g*mass));
 		if (eccentricitySqrd < 1){
 			nu = Math.atan2(Math.sin(zenithAngle)*Math.cos(zenithAngle), Math.pow(Math.sin(zenithAngle), 2) - g*mass/(distance*speed*speed));
-			periapsisAngle = -nu;
 		} else {
 			cosNu = (semiMajorAxis*(1-eccentricitySqrd) - distance)/(eccentricity*distance);
 			if (cosNu > 1)
@@ -218,9 +223,20 @@ $(document).ready(function() {
 			nu = Math.acos(cosNu);
 			if (zenithAngle > Math.PI/2 && zenithAngle < 3*Math.PI/2)
 				nu = -nu;
-			periapsisAngle = -nu;
 		}
-		var orbit = new Orbit(mass, eccentricity, semiMajorAxis, periapsisAngle, 0, 0);
+		inclination = Math.acos(Math.sin(shipPhi)*Math.sin(azimuthAngle));
+		if (inclination === 0){
+			longAscNode = 0;
+			periapsisAngle = shipTheta - nu;
+		} else {
+			lambda = Math.atan(Math.cos(shipPhi)*Math.tan(azimuthAngle));
+			if (azimuthAngle > Math.PI/2)
+				lambda = lambda + Math.PI;
+			longAscNode = shipTheta - lambda;
+			l = Math.atan2(1/Math.tan(shipPhi), Math.cos(azimuthAngle));
+			periapsisAngle = l - nu;
+		}
+		var orbit = new Orbit(mass, eccentricity, semiMajorAxis, periapsisAngle, inclination, longAscNode);
 		orbit.setInitMeanAnomaly(nu, time);
 		return orbit;
 	}
@@ -258,10 +274,12 @@ $(document).ready(function() {
 		var distance = parseFloat($('#distance').val());
 		var speed = parseFloat($('#speed').val());
 		var zenithAngle = parseFloat($('#zenithangle').val());
-		if (!isNaN(mass) && !isNaN(distance) && !isNaN(speed) && !isNaN(zenithAngle)){
+		var azimuthAngle = parseFloat($('#azimuthangle').val());
+		if (!isNaN(mass) && !isNaN(distance) && !isNaN(speed) && !isNaN(zenithAngle) && !isNaN(azimuthAngle)){
 			scene.remove(orbitPath);
 			zenithAngle = UTIL.toRadians(zenithAngle);
-			orbit = calcOrbit(mass, distance, speed, zenithAngle);
+			azimuthAngle = UTIL.toRadians(azimuthAngle);
+			orbit = calcOrbit(mass, distance, speed, zenithAngle, azimuthAngle);
 			updateShipPos();
 			drawOrbit(orbit);
 		}
@@ -301,15 +319,22 @@ $(document).ready(function() {
 		var nu = orbit.getTrueAnomaly(time);
 		var dist = orbit.a*(1-Math.pow(orbit.e, 2)) / (1 + orbit.e*Math.cos(nu));
 		var coords = orbit.getPosition(nu);
+		shipTheta = coords.theta;
+		shipPhi = coords.phi;
 		ship.position.x = coords.x;
 		ship.position.y = coords.y;
 		ship.position.z = coords.z;
 		var speed = Math.sqrt(g*mass*(2/dist - 1/orbit.a));
-		var angleRad = -Math.atan(orbit.e*Math.sin(nu)/(1 + orbit.e*Math.cos(nu))) + Math.PI/2;
-		var angle = 180 * angleRad / Math.PI;
+		var zenithAngle = UTIL.toDegrees(-Math.atan(orbit.e*Math.sin(nu)/(1 + orbit.e*Math.cos(nu))) + Math.PI/2);
+		var lambda = shipPhi - orbit.longAscNode;
+		var delta = Math.PI/2 - shipTheta;
+		var azimuthAngle = UTIL.toDegrees(Math.atan(Math.tan(lambda)/Math.sin(delta)));
+		if (lambda > Math.PI/2)
+			azimuthAngle = azimuthAngle + 180;
 		$('#distance').val(dist);
 		$('#speed').val(speed);
-		$('#angle').val(angle);
+		$('#zenithangle').val(zenithAngle);
+		$('#azimuthangle').val(azimuthAngle);
 		$('#trueanomaly').val(UTIL.toDegrees(nu));
 	}
 	
