@@ -376,10 +376,8 @@ $(document).ready(function() {
 	$('#start').click(function(){
 		timeWarp = 100;
 		clock = new THREE.Clock(true);
-		$('#mass').prop("disabled", true);
-		$('#distance').prop("disabled", true);
-		$('#speed').prop("disabled", true);
-		$('#angle').prop("disabled", true);
+		$('.parameter').prop("disabled", true);
+		$('.param2').prop("disabled", true);
 		$('#start').hide();
 		$('#stop').show();
 		$('#fastback').show();
@@ -390,10 +388,8 @@ $(document).ready(function() {
 	});
 	$('#stop').click(function() {
 		timeWarp = 0;
-		$('#mass').prop("disabled", false);
-		$('#distance').prop("disabled", false);
-		$('#speed').prop("disabled", false);
-		$('#angle').prop("disabled", false);
+		$('.parameter').prop("disabled", false);
+		$('.param2').prop("disabled", false);
 		$('#start').show();
 		$('#stop').hide();
 		$('#fastback').hide();
