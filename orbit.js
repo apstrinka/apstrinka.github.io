@@ -431,10 +431,12 @@ $(document).ready(function() {
 		isDragging = true;
 	});
 	$('#viewportFrame').on({'touchstart': function(event){
+		event.preventDefault();
 		mouseX = event.originalEvent.pageX;
 		mouseY = event.originalEvent.pageY;
 	}});
 	$('#viewportFrame').on({'touchmove': function(event){
+		event.preventDefault();
 		var diffX = event.originalEvent.pageX - mouseX;
 		var diffY = event.originalEvent.pageY - mouseY;
 		cam.phi = cam.phi + .005*diffX;
