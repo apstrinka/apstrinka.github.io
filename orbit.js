@@ -430,6 +430,9 @@ $(document).ready(function() {
 		mouseY = event.pageY;
 		isDragging = true;
 	});
+	$('#viewportFrame').on({'touchmove': function(event){
+		alert(event.pageX);
+	}});
 	$('#viewportFrame').mouseup(function(event){
 		isDragging = false;
 	});
