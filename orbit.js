@@ -430,9 +430,23 @@ $(document).ready(function() {
 		mouseY = event.pageY;
 		isDragging = true;
 	});
+	$('#viewportFrame').on({'touchstart': function(event){
+		mouseX = event.originalEvent.pageX;
+		mouseY = event.originalEvent.pageY;
+	}});
 	$('#viewportFrame').on({'touchmove': function(event){
-		alert('test');
-		alert(event.orignalEvent.pageX);
+		var diffX = event.originalEvent.pageX - mouseX;
+		var diffY = event.originalEvent.pageY - mouseY;
+		cam.phi = cam.phi + .005*diffX;
+		cam.theta = cam.theta - .005*diffY;
+		if (cam.theta < .00001)
+			cam.theta = .00001;
+		if (cam.theta > Math.PI)
+			cam.theta = Math.PI;
+		cam.setCameraPosition();
+		renderer.render(scene, cam.camera);
+		mouseX = event.originalEvent.pageX;
+		mouseY = event.originalEvent.pageY;
 	}});
 	$('#viewportFrame').mouseup(function(event){
 		isDragging = false;
