@@ -431,7 +431,7 @@ $(document).ready(function() {
 		isDragging = true;
 	});
 	$('#viewportFrame').on({'touchmove': function(event){
-		alert(event.pageX);
+		alert(event.orignalEvent.pageX);
 	}});
 	$('#viewportFrame').mouseup(function(event){
 		isDragging = false;
