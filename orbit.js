@@ -224,16 +224,16 @@ $(document).ready(function() {
 			if (zenithAngle > Math.PI/2 && zenithAngle < 3*Math.PI/2)
 				nu = -nu;
 		}
-		inclination = Math.acos(Math.sin(shipPhi)*Math.sin(azimuthAngle));
+		inclination = Math.acos(Math.sin(shipTheta)*Math.sin(azimuthAngle));
 		if (inclination === 0){
 			longAscNode = 0;
 			periapsisAngle = shipTheta - nu;
 		} else {
-			lambda = Math.atan(Math.cos(shipPhi)*Math.tan(azimuthAngle));
+			lambda = Math.atan(Math.cos(shipTheta)*Math.tan(azimuthAngle));
 			if (azimuthAngle > Math.PI/2)
 				lambda = lambda + Math.PI;
 			longAscNode = shipTheta - lambda;
-			l = Math.atan2(1/Math.tan(shipPhi), Math.cos(azimuthAngle));
+			l = Math.atan2(1/Math.tan(shipTheta), Math.cos(azimuthAngle));
 			periapsisAngle = l - nu;
 		}
 		var orbit = new Orbit(mass, eccentricity, semiMajorAxis, periapsisAngle, inclination, longAscNode);
