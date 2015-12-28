@@ -182,7 +182,7 @@ $(document).ready(function() {
 		renderer.render(scene, cam.camera);
 		
 		shipTheta = Math.PI/2;
-		shipPhi = 0;
+		shipPhi = Math.PI/2;
 	};
 	
 	var getHyperbolaPoints = function(a, e, cX, cY, theta){
