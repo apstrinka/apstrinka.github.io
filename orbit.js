@@ -1,7 +1,7 @@
 "use strict"
 
 $(document).ready(function() {
-	var scene, cam, renderer, ship, shipTheta, shipPhi, planet, orbit, orbitPath, clock, timeWarp, mouseX, mouseY, isDragging;
+	var scene, cam, renderer, ship, shipTheta, shipPhi, planet, orbit, orbitPath, clock, timeWarp, mouseX, mouseY, isDragging, panelIn, panelSize;
 	var time = 0;
 	var g = 6.67e-11;
 	
@@ -143,6 +143,11 @@ $(document).ready(function() {
 	}
 	
 	var init = function(){
+		panelSize = $('#paramsDiv').outerWidth();
+		
+		$('#paramsDiv').css({left: window.innerWidth});
+		panelIn = true;
+		
 		scene = new THREE.Scene();
 		cam = {
 			camera: new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1e100 ),
@@ -473,6 +478,15 @@ $(document).ready(function() {
 		}
 		cam.setCameraPosition();
 		renderer.render(scene, cam.camera);
+	});
+	$('#testButton').click(function() {
+		var size = panelSize;
+		if (panelIn){
+			$('#paramsDiv').animate({left: '-=' + size + 'px'});
+		} else {
+			$('#paramsDiv').animate({left: '+=' + size + 'px'});
+		}
+		panelIn = !panelIn;
 	});
 	
 	init();

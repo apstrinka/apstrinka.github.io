@@ -1,0 +1,11 @@
+.header {
+	background-color: #111;
+	color: #eee;
+	padding: 10px;
+	padding-left: 50px;
+}
+
+.viewport {
+	width: 100%;
+	height: 500px;
+}

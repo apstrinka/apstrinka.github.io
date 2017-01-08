@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link href="aldraw.css" rel="stylesheet">
+		<title>AlDraw</title>
+	</head>
+	<body>
+		<div class="header"><h1>AlDraw</h1></div>
+		<div class="controls">
+			<span>
+				<input id="draw" type="radio" name="modeGroup" value="draw" checked><label for="draw">Draw</label>
+				<input id="erase" type="radio" name="modeGroup" value="erase"><label for="erase">Erase</label>
+			</span>
+			<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+			<span>
+				<input id="segment" type="radio" name="inputMode" value="segment"><label for="segment">Segment</label>
+				<input id="ray" type="radio" name="inputMode" value="ray"><label for="ray">Ray</label>
+				<input id="line" type="radio" name="inputMode" value="line"><label for="line">Line</label>
+				<input id="arc" type="radio" name="inputMode" value="arc"><label for="arc">Arc</label>
+				<input id="circle" type="radio" name="inputMode" value="circle" checked><label for="cirle">Circle</label>
+			</span>
+		</div>
+		<div class="viewport">
+			<canvas id="myCanvas" width="1500px" height="500px"></canvas>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script src="aldraw.js"></script>
+	</body>
+</html>

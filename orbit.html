@@ -6,20 +6,21 @@
   </head>
   <body style="overflow: hidden;" oncontextmenu="return false;">
     <div id="viewportFrame"></div>
-		<div style="position: absolute; right: 1em; top: 1em;">
+		<button id="testButton" style="position: absolute; top: 1em;">Test</button>
+		<div id="paramsDiv" style="background-color: lightgray; white-space: nowrap; padding: 10px; height: 100%; overflow-y: auto; position: absolute; top: 0px;">
 			<!--h2 style="color: #ffffff">Orbits</h2-->
-			<p style="color: #ffffff">Time: <input type="number" id="time" value="0" style="color: #000000"> s</p>
-			<p style="color: #ffffff">Planet Mass: <input type="number" id="mass" class="parameter" value="5.972e24" style="color: #000000"> kg</p>
-			<p style="color: #ffffff">Distance: <input type="number" id="distance" class="parameter" value="7e6" style="color: #000000"> m</p>
-			<p style="color: #ffffff">Speed: <input type="number" id="speed" class="parameter" value="7561" style="color: #000000"> m/s</p>
-			<p style="color: #ffffff">Zenith Angle: <input type="number" id="zenithangle" class="parameter" value="90" style="color: #000000"> degrees</p>
-			<p style="color: #ffffff">Azimuth Angle: <input type="number" id="azimuthangle" class="parameter" value="90" style="color: #000000"> degrees</p>
-			<p style="color: #ffffff">Eccentricity: <input type="number" id="eccentricity" class="param2" value="0" style="color: #000000"></p>
-			<p style="color: #ffffff">Semimajor Axis: <input type="number" id="semimajoraxis" class="param2" value="0" style="color: #000000"> m</p>
-			<p style="color: #ffffff">Argument of Periapsis: <input type="number" id="periapsisangle" class="param2" value="0" style="color: #000000"> degrees</p>
-			<p style="color: #ffffff">Inclination: <input type="number" id="inclination" class="param2" value="0" style="color: #000000"> degrees</p>
-			<p style="color: #ffffff">Longitude of Ascending Node: <input type="number" id="longascnode" class="param2" value="0" style="color: #000000"> degrees</p>
-			<p style="color: #ffffff">True Anomaly: <input type="number" id="trueanomaly" class="param2" value="0" style="color: #000000"> degrees</p>
+			<p>Time: <input type="number" id="time" value="0" style="color: #000000"> s</p>
+			<p>Planet Mass: <input type="number" id="mass" class="parameter" value="5.972e24" style="color: #000000"> kg</p>
+			<p>Distance: <input type="number" id="distance" class="parameter" value="7e6" style="color: #000000"> m</p>
+			<p>Speed: <input type="number" id="speed" class="parameter" value="7561" style="color: #000000"> m/s</p>
+			<p>Zenith Angle: <input type="number" id="zenithangle" class="parameter" value="90" style="color: #000000"> degrees</p>
+			<p>Azimuth Angle: <input type="number" id="azimuthangle" class="parameter" value="90" style="color: #000000"> degrees</p>
+			<p>Eccentricity: <input type="number" id="eccentricity" class="param2" value="0" style="color: #000000"></p>
+			<p>Semimajor Axis: <input type="number" id="semimajoraxis" class="param2" value="0" style="color: #000000"> m</p>
+			<p>Argument of Periapsis: <input type="number" id="periapsisangle" class="param2" value="0" style="color: #000000"> degrees</p>
+			<p>Inclination: <input type="number" id="inclination" class="param2" value="0" style="color: #000000"> degrees</p>
+			<p>Longitude of Ascending Node: <input type="number" id="longascnode" class="param2" value="0" style="color: #000000"> degrees</p>
+			<p>True Anomaly: <input type="number" id="trueanomaly" class="param2" value="0" style="color: #000000"> degrees</p>
 			<button id="zoomIn" class="btn">Zoom In</button>
 			<button id="zoomOut" class="btn">Zoom Out</button>
 			<br /><br />
