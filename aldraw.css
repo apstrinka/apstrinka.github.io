@@ -19,6 +19,7 @@ html, body{
 
 .controls{
 	flex: 0 1 auto;
+	background-color: lightgray;
 }
 
 .viewport {
