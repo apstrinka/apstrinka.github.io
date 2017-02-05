@@ -15,6 +15,44 @@ var AlDrawModule = (function(){
 			}
 			return false;
 		},
+		midPoint: function(p1, p2){
+			var x = (p1.x + p2.x)/2;
+			var y = (p1.y + p2.y)/2;
+			return new Point(x, y);
+		},
+		perpendicularSlope: function(slope){
+			var ret = Number.POSITIVE_INFINITY;
+			if (!Utils.floatsEqual(slope, 0)){
+				ret = -1/slope;
+			}
+			return ret;
+		},
+		// Returns 1 if the point is above the line, -1 if below, and 0 if on.
+		// For vertical lines, a higher x coordinate is considered above.
+		comparePointToLine: function(point, line){
+			var slope = line.getSlope();
+			var intercept = line.getIntercept();
+			var ret = 0;
+			if (!Number.isFinite(slope)){
+				if (Utils.floatsEqual(point.x, intercept)){
+					ret = 0;
+				} else if (point.x > intercept){
+					ret = 1;
+				} else {
+					ret = -1;
+				}
+			} else {
+				var lY = slope * point.x + intercept;
+				if (Utils.floatsEqual(point.y, lY)){
+					ret = 0;
+				} else if (point.y > lY){
+					ret = 1;
+				} else {
+					ret = -1;
+				}
+			}
+			return ret;
+		},
 		normalizeAngle: function(a){
 			var b = a % (2 * Math.PI);
 			if (b < 0)
@@ -25,11 +63,40 @@ var AlDrawModule = (function(){
 		},
 		angleSum: function(a, b){
 			var c = a + b;
-			return normalizeAngle(c);
+			return Utils.normalizeAngle(c);
+		},
+		angleDifference: function(a, b){
+			var c = a - b;
+			c = Utils.normalizeAngle(c);
+			return c;
+		},
+		smallerAngleDifference: function(a, b){
+			return Math.min(Utils.angleDifference(a, b), Utils.angleDifference(b, a));
 		},
 		oppositeAngle: function(a){
-			return angleSum(a, Math.PI);
+			return Utils.angleSum(a, Math.PI);
 		},
+		angleToSlope: function(a){
+			var s = Math.tan(a);
+			if (Utils.floatsEqual(a, Math.PI/2) || Utils.floatsEqual(a, 3*Math.PI/2)){
+				s = Number.POSITIVE_INFINITY;
+			}
+			return s;
+		},
+		slopeToAngle: function(s){
+			var a = Math.atan(s);
+			a = Utils.normalizeAngle(a);
+			return a;
+		},
+		arrayContains: function(arr, x){
+			var length = arr.length;
+			for (var i = 0; i < length; i++){
+				if (x.equals(arr[i])){
+					return true;
+				}
+			}
+			return false;
+		}
 	};
 
 	function Color(red, green, blue){
@@ -91,16 +158,271 @@ var AlDrawModule = (function(){
 		context.fill();
 		context.fillStyle = style;
 	};
+	
+	var abstractLine = {
+		getSlope: function(){
+			console.log("getSlope() hasn't been implemented");
+			console.trace();
+		},
+		getIntercept: function(){
+			console.log("getIntercept() hasn't been implemented");
+			console.trace();
+		},
+		contains: function(){
+			console.log("contains() hasn't been implemented");
+			console.trace();
+		},
+		distance: function(p){
+			var m = this.getSlope();
+			var b = this.getIntercept();
+			var x = p.x;
+			var y = p.y;
+			var dist = 0;
+			if (!Number.isFinite(m)){
+				dist = Math.abs(x - b);
+			} else {
+				dist = Math.abs(y - m * x - b) / Math.hypot(m, 1);
+			}
+			return dist;
+		},
+		curvature: function(){
+			return 0;
+		},
+		closestPoint: function(p){
+			var slope = 0;
+			if (Utils.floatsEqual(this.getSlope(), 0)){
+				slope = Number.POSITIVE_INFINITY;
+			} else if (Number.isFinite(this.getSlope())){
+				slope = -1/this.getSlope();
+			}
+			var otherLine = newLineFromPointSlope(p, slope);
+			return this.intersectionLine(otherLine);
+		},
+		intersectLine: function(otherLine){
+			var m1 = this.getSlope();
+			var b1 = this.getIntercept();
+			var m2 = otherLine.getSlope();
+			var b2 = otherLine.getIntercept();
+			if (Utils.floatsEqual(m1, m2)){
+				return [];
+			}
+			var x, y;
+			if (!Number.isFinite(m1)){
+				x = b1;
+				y = m2 * x + b2;
+			} else if (!Number.isFinite(m2)){
+				x = b2;
+				y = m1 * x + b1;
+			} else {
+				x = (b2 - b1) / (m1 - m2);
+				y = m1 * x + b1;
+			}
+			var ret = new Point(x, y);
+			if (this.contains(ret) && otherLine.contains(ret))
+				return [ret];
+			else
+				return [];
+		},
+		intersectCircle: function(otherCircle){
+			var xc = otherCircle.center.x;
+			var yc = otherCircle.center.y;
+			var r = otherCircle.radius;
+			var m = this.getSlope();
+			var intercept = this.getIntercept();
+			var temp = [];
+			var ret = [];
+			if (Utils.floatsEqual(this.distance(otherCircle.center), r)){
+				var tan = this.closestPoint(otherCircle.center);
+				if (otherCircle.contains(tan)){
+					return [tan];
+				} else {
+					return [];
+				}
+			}
+			if (!Number.isFinite(m)){
+				if (intercept < xc - r || intercept > xc + r){
+					return [];
+				}
+				temp.push(new Point(intercept, yc + Math.sqrt(Math.pow(r, 2) - Math.pow(intercept - xc, 2))));
+				temp.push(new Point(intercept, yc - Math.sqrt(Math.pow(r, 2) - Math.pow(intercept - xc, 2))));
+			} else {
+				var a = 1 + Math.pow(m, 2);
+				var b = 2 * (m * intercept - xc - m * yc);
+				var c = Math.pow(xc, 2) + Math.pow(intercept, 2) - 2 * intercept * yc + Math.pow(yc, 2) - Math.pow(r, 2);
+				var d = Math.pow(b, 2) - 4 * a * c;
+				if (d < 0)
+					return [];
+				var x = (-b + Math.sqrt(d)) / (2 * a);
+				temp.push(new Point(x, m * x + intercept));
+				x = (-b - Math.sqrt(d)) / (2 * a);
+				temp.push(new Point(x, m * x + intercept));
+			}
+			var i, length = temp.length;
+			for (i = 0; i < length; i++){
+				if (this.contains(temp[i]) && otherCircle.contains(temp[i])){
+					ret.push(temp[i]);
+				}
+			}
+			return ret;
+		},
+		parallel: function(otherLine){
+			return Utils.floatsEqual(this.getSlope(), otherLine.getSlope());
+		},
+		same: function(otherLine){
+			return Utils.floatsEqual(this.getSlope(), otherLine.getSlope()) && Utils.floatsEqual(this.getIntercept(), otherLine.getIntercept());
+		}
+	};
+	
+	function newLineFromTwoPoints(p1, p2){
+		var slope, intercept;
+		if (Utils.floatsEqual(p1.x, p2.x)){
+			slope = Number.POSITIVE_INFINITY;
+		} else {
+			slope = (p2.y - p1.y) / (p2.x - p1.x);
+		}
+		
+		if (!Number.isFinite(slope)){
+			intercept = p1.x;
+		} else {
+			intercept = p1.y - slope * p1.x;
+		}
+		
+		return new Line(slope, intercept);
+	}
+	
+	function newLineFromPointSlope(p, slope){
+		var intercept;
+		if (!Number.isFinite(slope)){
+			intercept = p.x;
+		} else {
+			intercept = p.y - slope * p.x;
+		}
+		return new Line(slope, intercept);
+	}
 
 	function Line(slope, intercept){
 		this.slope = slope;
 		this.intercept = intercept; //This is the y-intercept, unless the line is vertical
 	}
-
+	
+	Line.prototype = Object.create(abstractLine);
+	
+	Line.prototype.getSlope = function(){
+		return this.slope;
+	};
+	
+	Line.prototype.getIntercept = function(){
+		return this.intercept;
+	};
+	
+	Line.prototype.contains = function(p){
+		if(!Number.isFinite(this.slope)){
+			return Utils.floatsEqual(this.intercept, p.x);
+		} else {
+			return Utils.floatsEqual(p.y, this.slope*p.x + this.intercept);
+		}
+	};
+	
+	Line.prototype.getPortionInsideRectangle = function(bounds){
+		var points = [];
+		var length = bounds.length;
+		for (var i = 0; i < length; i++){
+			var intersections = this.intersectLine(bounds[i]);
+			var length2 = intersections.length;
+			for (var j = 0; j < length2; j++){
+				if (!Utils.arrayContains(points, intersections[j])){
+					points.push(intersections[j]);
+				}
+			}
+		}
+		if (points.length >= 2){
+			return new Segment(points[0], points[1]);
+		} else {
+			return null;
+		}
+	};
+	
+	Line.prototype.draw = function(context, converter){
+		var bounds = converter.getAbstractBoundaries();
+		var drawSegment = this.getPortionInsideRectangle(bounds);
+		if (drawSegment != null){
+			drawSegment.draw(context, converter);
+		}
+	};
+	
+	function newRayFromTwoPoints(p1, p2){
+		var angle = p1.angle(p2);
+		return new Ray(p1, angle);
+	}
+	
+	function Ray(start, angle){
+		this.start = start;
+		this.angle = angle;
+	}
+	
+	Ray.prototype = Object.create(abstractLine);
+	
+	Ray.prototype.getSlope = function(){
+		var ret = 0;
+		if (Utils.floatsEqual(this.angle, Math.PI/2)){
+			ret = Number.POSITIVE_INFINITY;
+		} else if (Utils.floatsEqual(this.angle, 3*Math.PI/2)){
+			ret = Number.NEGATIVE_INFINITY;
+		} else {
+			ret = Math.tan(this.angle);
+		}
+		return ret;
+	};
+	
+	Ray.prototype.getIntercept = function(){
+		var slope = this.getSlope();
+		if (!Number.isFinite(slope)){
+			return this.start.x;
+		} else {
+			return this.start.y - slope*this.start.x;
+		}
+	};
+		
+	Ray.prototype.contains = function(p){
+		var pAng = this.start.angle(p);
+		return Utils.floatsEqual(pAng, this.angle) || p.equals(this.start);
+	};
+		
+	Ray.prototype.getPortionInsideRectangle = function(bounds){
+		var points = [this.start];
+		var length = bounds.length;
+		for (var i = 0; i < length; i++){
+			var intersections = this.intersectLine(bounds[i]);
+			var length2 = intersections.length;
+			for (var j = 0; j < length2; j++){
+				if (!Utils.arrayContains(points, intersections[j])){
+					points.push(intersections[j]);
+				}
+			}
+		}
+		if (points.length === 2){
+			return new Segment(points[0], points[1]);
+		} else if (points.length > 2){
+			return new Segment(points[1], points[2]);
+		} else {
+			return null;
+		}
+	};
+	
+	Ray.prototype.draw = function(context, converter){
+		var bounds = converter.getAbstractBoundaries();
+		var drawSegment = this.getPortionInsideRectangle(bounds);
+		if (drawSegment != null){
+			drawSegment.draw(context, converter);
+		}
+	};
+		
 	function Segment(p1, p2){
 		this.p1 = p1;
 		this.p2 = p2;
 	}
+	
+	Segment.prototype = Object.create(abstractLine);
 
 	Segment.prototype.getSlope = function(){
 		if (Utils.floatsEqual(this.p1.x, this.p2.x)){
@@ -118,46 +440,16 @@ var AlDrawModule = (function(){
 	};
 
 	Segment.prototype.contains = function(point){
-		var x1 = p1.x;
-		var y1 = p1.y;
-		var x2 = p.x;
-		var y2 = p.y;
-		var x3 = p2.x;
-		var y3 = p2.y;
+		var x1 = this.p1.x;
+		var y1 = this.p1.y;
+		var x2 = point.x;
+		var y2 = point.y;
+		var x3 = this.p2.x;
+		var y3 = this.p2.y;
 		var m = this.getSlope();
 		var isOn = (!Number.isFinite(m) && Utils.floatsEqual(x2,x1)) || (Utils.floatsEqual(y2 - y1, m * (x2 - x1)));
 		isOn = isOn && Utils.isBetween(x2, x1, x3) && Utils.isBetween(y2, y1, y3);
 		return isOn;
-	};
-
-	Segment.prototype.intersectLine = function(otherLine){
-		var m1 = this.getSlope();
-		var b1 = this.getIntercept();
-		var m2 = otherLine.getSlope();
-		var b2 = otherLine.getSlope();
-		var x, y;
-		if (Utils.floatsEqual(m1, m2)){
-			return [];
-		}
-		if (!Number.isFinite(m1)){
-			x = b1;
-			y = m2 * x + b2;
-		} else if (!Number.isFinite(m2)){
-			x = b2;
-			y = m1 * x + b1;
-		} else {
-			x = (b2 - b1) / (m1 - m2);
-				y = m1 * x + b1;
-		}
-		var p = new Point(x, y);
-		if (this.contains(p) && otherLine.contains(p)){
-			return [p];
-		} else {
-			return [];
-		}
-	};
-
-	Segment.prototype.intersectCircle = function(otherCircle){
 	};
 
 	Segment.prototype.draw = function(context, converter){
@@ -237,6 +529,49 @@ var AlDrawModule = (function(){
 	Circle.prototype.same = function(otherCircle){
 		return (this.center.equals(otherCircle.center) && Utils.floatsEqual(this.radius, otherCircle.radius));
 	};
+	
+	function newArcFromThreePoints(p1, p2, p3){
+		var center = p1;
+		var radius = p1.dist(p2);
+		var start = p1.angle(p2);
+		var sweep = Utils.angleDifference(p1.angle(p3), start);
+		return new Arc(center, radius, start, sweep);
+	}
+	
+	function Arc(center, radius, start, sweep, inverse){
+		this.center = center;
+		this.radius = radius;
+		this.start = start;
+		this.sweep = sweep;
+		if (inverse === undefined){
+			this.inverse = false;
+		} else {
+			this.inverse = inverse;
+		}
+	}
+	
+	Arc.prototype = Object.create(Circle.prototype);
+	
+	Arc.prototype.getEnd = function(){
+		return Utils.angleSum(this.start, this.sweep);
+	};
+	
+	Arc.prototype.contains = function(point){
+		var d = this.center.dist(point);
+		if (!Utils.floatsEqual(d, this.radius)){
+			return false;
+		}
+		var ang = this.center.angle(point);
+		return Utils.angleDifference(ang, this.start) < this.sweep || Utils.floatsEqual(ang, this.start) || Utils.floatsEqual(ang, this.getEnd());
+	};
+	
+	Arc.prototype.draw = function(context, converter){
+		var p = converter.abstractToScreenCoord(this.center);
+		var screenRadius = converter.abstractToScreenDist(this.radius);
+		context.beginPath();
+		context.arc(p.x, p.y, screenRadius, this.start, this.getEnd());
+		context.stroke();
+	};
 
 	function CoordinateConverter(){
 		/*
@@ -253,6 +588,19 @@ var AlDrawModule = (function(){
 		this.angle = 0;
 		this.zoomAmt = 1.2;
 	}
+	
+	CoordinateConverter.prototype.getAbstractBoundaries = function(){
+		var upperLeft = this.screenToAbstractCoord(new Point(0, 0));
+		var upperRight = this.screenToAbstractCoord(new Point(this.width, 0));
+		var lowerRight = this.screenToAbstractCoord(new Point(this.width, this.height));
+		var lowerLeft = this.screenToAbstractCoord(new Point(0, this.height));
+		var ret = [];
+		ret.push(new Segment(upperLeft, upperRight));
+		ret.push(new Segment(upperRight, lowerRight));
+		ret.push(new Segment(lowerRight, lowerLeft));
+		ret.push(new Segment(lowerLeft, upperLeft));
+		return ret;
+	};
 
 	CoordinateConverter.prototype.zoomIn = function(x, y){
 		this.conversionRatio = this.conversionRatio * this.zoomAmt;
@@ -302,6 +650,9 @@ var AlDrawModule = (function(){
 
 	function AlDrawState(){
 		this.segments = [];
+		this.rays = [];
+		this.lines = [];
+		this.arcs = [];
 		this.circles = [];
 		this.points = [];
 		this.next = null;
@@ -310,7 +661,6 @@ var AlDrawModule = (function(){
 
 	AlDrawState.prototype.start = function(){
 		var i, initRad = 1;
-		this.segments.push(new Segment(new Point(0, 1), new Point(1, 0)));
 		this.circles.push(new Circle(new Point(0, 0), 1));
 		this.points.push(new Point(0, 0));
 		for (i = 0; i < 6; i++){
@@ -334,10 +684,73 @@ var AlDrawModule = (function(){
 
 	AlDrawState.prototype.addAllIntersections = function(intersectable){
 		var i, length;
+		length = this.segments.length;
+		for (i = 0; i < length; i++){
+			this.points = this.points.concat(intersectable.intersectLine(this.segments[i]));
+		}
+		length = this.rays.length;
+		for (i = 0; i < length; i++){
+			this.points = this.points.concat(intersectable.intersectLine(this.rays[i]));
+		}
+		length = this.lines.length;
+		for (i = 0; i < length; i++){
+			this.points = this.points.concat(intersectable.intersectLine(this.lines[i]));
+		}
+		length = this.arcs.length;
+		for (i = 0; i < length; i++){
+			this.points = this.points.concat(intersectable.intersectCircle(this.arcs[i]));
+		}
 		length = this.circles.length;
 		for (i = 0; i < length; i++){
 			this.points = this.points.concat(intersectable.intersectCircle(this.circles[i]));
 		}
+	};
+	
+	AlDrawState.prototype.addSegmentWithIntersections = function(segment){
+		this.addAllIntersections(segment);
+		this.addSegmentWithoutIntersections(segment);
+	};
+	
+	AlDrawState.prototype.addSegmentWithoutIntersections = function(segment){
+		//TODO This needs to be updated
+		this.segments.push(segment);
+	};
+	
+	AlDrawState.prototype.addRayWithIntersections = function(ray){
+		this.addAllIntersections(ray);
+		this.addRayWithoutIntersections(ray);
+	};
+	
+	AlDrawState.prototype.addRayWithoutIntersections = function(ray){
+		//TODO this needs to be updated
+		this.rays.push(ray);
+	};
+	
+	AlDrawState.prototype.addLineWithIntersections = function(line){
+		this.addAllIntersections(line);
+		this.addLineWithoutIntersections(line);
+	};
+	
+	AlDrawState.prototype.addLineWithoutIntersections = function(line){
+		//TODO this need to be updated too
+		var i, length;
+		length = this.lines.length;
+		for (i = 0; i < length; i++){
+			if (line.same(this.lines[i])){
+				return;
+			}
+		}
+		this.lines.push(line);
+	};
+	
+	AlDrawState.prototype.addArcWithIntersections = function(arc){
+		this.addAllIntersections(arc);
+		this.addArcWithoutIntersections(arc);
+	};
+	
+	AlDrawState.prototype.addArcWithoutIntersections = function(arc){
+		//TODO...
+		this.arcs.push(arc);
 	};
 
 	AlDrawState.prototype.addCircleWithIntersections = function(circle){
@@ -346,6 +759,7 @@ var AlDrawModule = (function(){
 	};
 
 	AlDrawState.prototype.addCircleWithoutIntersections = function(circle){
+		//TODO update
 		var i, length;
 		length = this.circles.length;
 		for (i = 0; i < length; i++){
@@ -360,6 +774,9 @@ var AlDrawModule = (function(){
 		var i, length;
 		var newState = new AlDrawState();
 		newState.segments = this.segments.slice(0);//Copies the array
+		newState.rays = this.rays.slice(0);
+		newState.lines = this.lines.slice(0);
+		newState.arcs = this.arcs.slice(0);
 		newState.circles = this.circles.slice(0); 
 		newState.points = this.points.slice(0);
 		return newState;
@@ -370,6 +787,18 @@ var AlDrawModule = (function(){
 		length = this.segments.length;
 		for (i = 0; i < length; i++){
 			this.segments[i].draw(context, converter);
+		}
+		length = this.rays.length;
+		for (i = 0; i < length; i++){
+			this.rays[i].draw(context, converter);
+		}
+		length = this.lines.length;
+		for (i = 0; i < length; i++){
+			this.lines[i].draw(context, converter);
+		}
+		length = this.arcs.length;
+		for (i = 0; i < length; i++){
+			this.arcs[i].draw(context, converter);
 		}
 		length = this.circles.length;
 		for (i = 0; i < length; i++){
@@ -410,6 +839,30 @@ var AlDrawModule = (function(){
 	InputStrategy.prototype.drag = function(x, y){
 		//TODO...
 	};
+	
+	var drawSegmentInputStrategy = new InputStrategy("Draw Segment", 2);
+	
+	drawSegmentInputStrategy.endHook = function(){
+		addSegment(new Segment(selectedPoints[0], selectedPoints[1]));
+	};
+	
+	var drawRayInputStrategy = new InputStrategy("Draw Ray", 2);
+	
+	drawRayInputStrategy.endHook = function(){
+		addRay(newRayFromTwoPoints(selectedPoints[0], selectedPoints[1]));
+	};
+	
+	var drawLineInputStrategy = new InputStrategy("Draw Line", 2);
+	
+	drawLineInputStrategy.endHook = function(){
+		addLine(newLineFromTwoPoints(selectedPoints[0], selectedPoints[1]));
+	};
+	
+	var drawArcInputStrategy = new InputStrategy("Draw Arc", 3);
+	
+	drawArcInputStrategy.endHook = function(){
+		addArc(newArcFromThreePoints(selectedPoints[0], selectedPoints[1], selectedPoints[2]));
+	};
 
 	var drawCircleInputStrategy = new InputStrategy("Draw Circle", 2);
 
@@ -438,7 +891,7 @@ var AlDrawModule = (function(){
 	var currentState = new AlDrawState();
 	var converter = new CoordinateConverter();
 	currentState.start();
-	var inputStrategy = drawCircleInputStrategy;
+	var inputStrategy = drawArcInputStrategy;
 	var selectedPoints = [];
 	var ctx;
 	
@@ -466,7 +919,39 @@ var AlDrawModule = (function(){
 		if (isNew){
 			selectedPoints.push(p);
 		}
-		updateView(ctx, converter);
+		updateView();
+	}
+	
+	function addSegment(segment){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.addSegmentWithIntersections(segment);
+		addState(newState);
+		updateView();
+	}
+	
+	function addRay(ray){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.addRayWithIntersections(ray);
+		addState(newState);
+		updateView();
+	}
+	
+	function addLine(line){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.addLineWithIntersections(line);
+		addState(newState);
+		updateView();
+	}
+	
+	function addArc(arc){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.addArcWithIntersections(arc);
+		addState(newState);
+		updateView();
 	}
 
 	function addCircle(circle){
@@ -474,7 +959,7 @@ var AlDrawModule = (function(){
 		var newState = currentState.copy();
 		newState.addCircleWithIntersections(circle);
 		addState(newState);
-		updateView(ctx, converter);
+		updateView();
 	}
 
 	function addState(newState){
@@ -483,12 +968,12 @@ var AlDrawModule = (function(){
 		currentState = newState;
 	}
 
-	function updateView(context, converter){
-		context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-		currentState.draw(context, converter);
+	function updateView(){
+		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		currentState.draw(ctx, converter);
 		var length = selectedPoints.length;
 		for (var i = 0; i < length; i++){
-			selectedPoints[i].draw(context, converter, new Color(255, 0, 0));
+			selectedPoints[i].draw(ctx, converter, new Color(255, 0, 0));
 		}
 	}
 	
@@ -522,7 +1007,7 @@ $(document).ready(function(){
 		} else {
 			AlDrawModule.converter.zoomOut(ev.offsetX, ev.offsetY);
 		}
-		AlDrawModule.updateView(ctx, converter);
+		AlDrawModule.updateView();
 	});
 	
 	$("#myCanvas").mousedown(function(ev){
