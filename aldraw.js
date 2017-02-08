@@ -451,6 +451,10 @@ var AlDrawModule = (function(){
 		isOn = isOn && Utils.isBetween(x2, x1, x3) && Utils.isBetween(y2, y1, y3);
 		return isOn;
 	};
+	
+	Segment.prototype.isIn = function(otherSegment){
+		return otherSegment.contains(this.p1) && otherSegment.contains(this.p2);
+	};
 
 	Segment.prototype.draw = function(context, converter){
 		var p1 = converter.abstractToScreenCoord(this.p1);
@@ -459,6 +463,10 @@ var AlDrawModule = (function(){
 		context.moveTo(p1.x, p1.y);
 		context.lineTo(p2.x, p2.y);
 		context.stroke();
+	};
+	
+	Segment.prototype.equals = function(otherSegment){
+		return (this.p1.equals(otherSegment.p1) && this.p2.equals(otherSegment.p2)) || (this.p1.equals(otherSegment.p2) && this.p2.equals(otherSegment.p1));
 	};
 
 	function Circle(center, radius){
@@ -565,12 +573,22 @@ var AlDrawModule = (function(){
 		return Utils.angleDifference(ang, this.start) < this.sweep || Utils.floatsEqual(ang, this.start) || Utils.floatsEqual(ang, this.getEnd());
 	};
 	
+	Arc.prototype.isIn = function(otherArc){
+		var startIsIn = Utils.angleDifference(this.start, otherArc.start) <= otherArc.sweep;
+		var theRestIsIn = this.sweep < Utils.angleDifference(otherArc.getEnd(), this.start);
+		return startIsIn && theRestIsIn;
+	};
+	
 	Arc.prototype.draw = function(context, converter){
 		var p = converter.abstractToScreenCoord(this.center);
 		var screenRadius = converter.abstractToScreenDist(this.radius);
 		context.beginPath();
 		context.arc(p.x, p.y, screenRadius, this.start, this.getEnd());
 		context.stroke();
+	};
+	
+	Arc.prototype.equals = function(otherArc){
+		return (this.center.equals(otherArc.center) && Utils.floatsEqual(this.radius, otherArc.radius) && Utils.floatsEqual(this.start, otherArc.start) && Utils.floatsEqual(this.sweep, otherArc.sweep));
 	};
 
 	function CoordinateConverter(){
@@ -681,28 +699,37 @@ var AlDrawModule = (function(){
 		}
 		return ret;
 	};
+	
+	AlDrawState.prototype.addPoints = function(newPoints){
+		var length = newPoints.length;
+		for (var i = 0; i < length; i++){
+			if (!Utils.arrayContains(this.points, newPoints[i])){
+				this.points.push(newPoints[i]);
+			}
+		}
+	};
 
 	AlDrawState.prototype.addAllIntersections = function(intersectable){
 		var i, length;
 		length = this.segments.length;
 		for (i = 0; i < length; i++){
-			this.points = this.points.concat(intersectable.intersectLine(this.segments[i]));
+			this.addPoints(intersectable.intersectLine(this.segments[i]));
 		}
 		length = this.rays.length;
 		for (i = 0; i < length; i++){
-			this.points = this.points.concat(intersectable.intersectLine(this.rays[i]));
+			this.addPoints(intersectable.intersectLine(this.rays[i]));
 		}
 		length = this.lines.length;
 		for (i = 0; i < length; i++){
-			this.points = this.points.concat(intersectable.intersectLine(this.lines[i]));
+			this.addPoints(intersectable.intersectLine(this.lines[i]));
 		}
 		length = this.arcs.length;
 		for (i = 0; i < length; i++){
-			this.points = this.points.concat(intersectable.intersectCircle(this.arcs[i]));
+			this.addPoints(intersectable.intersectCircle(this.arcs[i]));
 		}
 		length = this.circles.length;
 		for (i = 0; i < length; i++){
-			this.points = this.points.concat(intersectable.intersectCircle(this.circles[i]));
+			this.addPoints(intersectable.intersectCircle(this.circles[i]));
 		}
 	};
 	
@@ -712,7 +739,63 @@ var AlDrawModule = (function(){
 	};
 	
 	AlDrawState.prototype.addSegmentWithoutIntersections = function(segment){
-		//TODO This needs to be updated
+		var i, length;
+		length = this.lines.length;
+		for (i = 0; i < length; i++){
+			if (segment.same(this.lines[i])){
+				return;
+			}
+		}
+		length = this.rays.length;
+		for (i = 0; i < length; i++){
+			var r = this.rays[i];
+			if (segment.same(r)){
+				if (r.contains(segment.p1) && r.contains(segment.p2)){
+					return;
+				} else if (r.contains(segment.p1)){
+					this.rays.splice(i, 1);
+					this.addRayWithoutIntersections(new Ray(segment.p2, r.angle));
+					return;
+				} else if (r.contains(segment.p2)){
+					this.rays.splice(i, 1);
+					this.addRayWithoutIntersections(new Ray(segment.p1, r.angle));
+					return;
+				}
+			}
+		}
+		length = this.segments.length;
+		for (i = 0; i < length; i++){
+			var s = this.segments[i];
+			if (segment.same(s)){
+				if (segment.isIn(s)){
+					return;
+				} else if (s.isIn(segment)){
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				} else if (segment.contains(s.p1) && s.contains(segment.p1)){
+					segment = new Segment(segment.p2, s.p2);
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				} else if (segment.contains(s.p1) && s.contains(segment.p2)){
+					segment = new Segment(segment.p1, s.p2);
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				} else if (segment.contains(s.p2) && s.contains(segment.p1)){
+					segment = new Segment(segment.p2, s.p1);
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				} else if (segment.contains(s.p2) && s.contains(segment.p2)){
+					segment = new Segment(segment.p1, s.p1);
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				}
+			}
+		}
 		this.segments.push(segment);
 	};
 	
@@ -722,7 +805,55 @@ var AlDrawModule = (function(){
 	};
 	
 	AlDrawState.prototype.addRayWithoutIntersections = function(ray){
-		//TODO this needs to be updated
+		var i, length;
+		length = this.lines.length;
+		for (i = 0; i < length; i++){
+			if (ray.same(this.lines[i])){
+				return;
+			}
+		}
+		length = this.rays.length;
+		for (i = 0; i < length; i++){
+			var r = this.rays[i];
+			if (ray.same(r)){
+				if (Utils.floatsEqual(ray.angle, r.angle)){
+					if (ray.contains(r.start)){
+						this.rays.splice(i, 1); //Remove the ith element
+						i--;
+						length--;
+					} else {
+						return;
+					}
+				} else {
+					if (ray.contains(r.start)){
+						this.rays.splice(i, 1);
+						this.addLineWithoutIntersections(new Line(ray.getSlope(), ray.getIntercept()));
+						return;
+					}
+				}
+			}
+		}
+		length = this.segments.length;
+		for (i = 0; i < length; i++){
+			var s = this.segments[i];
+			if (ray.same(s)){
+				if (ray.contains(s.p1) && ray.contains(s.p2)){
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				} else if (ray.contains(s.p1)){
+					ray = new Ray(s.p2, ray.angle);
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				} else if (ray.contains(s.p2)){
+					ray = new Ray(s.p1, ray.angle);
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				}
+			}
+		}
 		this.rays.push(ray);
 	};
 	
@@ -732,7 +863,6 @@ var AlDrawModule = (function(){
 	};
 	
 	AlDrawState.prototype.addLineWithoutIntersections = function(line){
-		//TODO this need to be updated too
 		var i, length;
 		length = this.lines.length;
 		for (i = 0; i < length; i++){
@@ -740,6 +870,11 @@ var AlDrawModule = (function(){
 				return;
 			}
 		}
+		function notSame(el){
+			return !line.same(el);
+		}
+		this.segments = this.segments.filter(notSame);
+		this.rays = this.rays.filter(notSame);
 		this.lines.push(line);
 	};
 	
@@ -749,7 +884,48 @@ var AlDrawModule = (function(){
 	};
 	
 	AlDrawState.prototype.addArcWithoutIntersections = function(arc){
-		//TODO...
+		var i, length;
+		length = this.circles.length;
+		for (i = 0; i < length; i++){
+			if (arc.same(this.circles[i])){
+				return;
+			}
+		}
+		length = this.arcs.length;
+		for (i = 0; i < length; i++){
+			var a = this.arcs[i];
+			if (arc.same(a)){
+				if (arc.isIn(a)){
+					return;
+				} else if (a.isIn(arc)){
+					this.arcs.splice(i, 1); //Remove the ith element
+					i--;
+					length--;
+				} else if (Utils.floatsEqual(arc.start, a.getEnd()) && Utils.floatsEqual(arc.getEnd(), a.start)){
+					this.arcs.splice(i, 1);
+					this.addCircleWithoutIntersections(new Circle(arc.center, arc.radius));
+					return;
+				} else if (Utils.floatsEqual(arc.start, a.getEnd()) && Utils.angleDifference(arc.getEnd(), a.start) < a.sweep) {
+					this.arcs.splice(i, 1);
+					this.addCircleWithoutIntersections(new Circle(arc.center, arc.radius));
+					return;
+				} else if (Utils.angleDifference(arc.start, a.start) < a.sweep && Utils.angleDifference(arc.getEnd(), a.start) < a.sweep) {
+					this.arcs.splice(i, 1);
+					this.addCircleWithoutIntersections(new Circle(arc.center, arc.radius));
+					return;
+				} else if (Utils.angleDifference(arc.start, a.start) < a.sweep) {
+					this.arcs.splice(i, 1);
+					i--;
+					length--;
+					arc = new Arc(arc.center, arc.radius, a.start, Utils.angleDifference(arc.getEnd(), a.start));
+				} else if (Utils.angleDifference(arc.getEnd(), a.start) < a.sweep) {
+					this.arcs.splice(i, 1);
+					i--;
+					length--;
+					arc = new Arc(arc.center, arc.radius, arc.start, Utils.angleDifference(a.getEnd(), arc.start));
+				}
+			}
+		}
 		this.arcs.push(arc);
 	};
 
@@ -759,7 +935,6 @@ var AlDrawModule = (function(){
 	};
 
 	AlDrawState.prototype.addCircleWithoutIntersections = function(circle){
-		//TODO update
 		var i, length;
 		length = this.circles.length;
 		for (i = 0; i < length; i++){
@@ -767,7 +942,303 @@ var AlDrawModule = (function(){
 				return;
 			}
 		}
+		function notSame(el){
+			return !circle.same(el);
+		}
+		this.arcs = this.arcs.filter(notSame);
 		this.circles.push(circle);
+	};
+	
+	AlDrawState.prototype.removeSegment = function(segment){
+		var i, length;
+		length = this.segments.length;
+		for (i = 0; i < length; i++){
+			var s = this.segments[i];
+			if (segment.same(s)){
+				if (segment.equals(s) || s.isIn(segment)){
+					this.segments.splice(i,1);
+					i--;
+					length--;
+				} else if (segment.isIn(s)){
+					var sp1 = s.p1;
+					var sp2 = s.p2;
+					var tp1 = segment.p1;
+					var tp2 = segment.p2;
+					if (Utils.floatsEqual(sp1.x, sp2.x)){
+						if (sp2.y < sp1.y){
+							sp1 = s.p2;
+							sp2 = s.p1;
+						}
+						if (tp2.y < tp1.y){
+							tp1 = segment.p2;
+							tp2 = segment.p1;
+						}
+					} else {
+						if (sp2.x < sp1.x){
+							sp1 = s.p2;
+							sp2 = s.p1;
+						}
+						if (tp2.x < tp1.x){
+							tp1 = segment.p2;
+							tp2 = segment.p1;
+						}
+					}
+					this.segments.splice(i, 1);
+					this.addSegmentWithoutIntersections(new Segment(sp1, tp1));
+					this.addSegmentWithoutIntersections(new Segment(tp2, sp2));
+					i--;
+					length--;
+				} else if (segment.contains(s.p1)){
+					this.segments.splice(i, 1);
+					if (s.contains(segment.p1)){
+						this.addSegmentWithoutIntersections(new Segment(segment.p1, s.p2));
+					} else {
+						this.addSegmentWithoutIntersections(new Segment(segment.p2, s.p2));
+					}
+					i--;
+					length--;
+				} else if (segment.contains(s.p2)){
+					this.segments.splice(i, 1);
+					if (s.contains(segment.p1)){
+						this.addSegmentWithoutIntersections(new Segment(segment.p1, s.p1));
+					} else {
+						this.addSegmentWithoutIntersections(new Segment(segment.p2, s.p1));
+					}
+					i--;
+					length--;
+				}
+			}
+		}
+		length = this.rays.length;
+		for (i = 0; i < length; i++){
+			var r = this.rays[i];
+			if (segment.same(r)){
+				if (r.contains(segment.p1) && r.contains(segment.p2)){
+					var t = new Segment(r.start, segment.p1);
+					var start = segment.p2;
+					if (t.contains(segment.p2)){
+						t = new Segment(r.start, segment.p2);
+						start = segment.p1;
+					}
+					this.rays.splice(i, 1);
+					this.addRayWithoutIntersections(new Ray(start, r.angle));
+					if (!t.p1.equals(t.p2)){
+						this.addSegmentWithoutIntersections(t);
+					}
+					i--;
+					length--;
+				} else if (r.contains(segment.p1) && !r.start.equals(segment.p1)){
+					this.rays.splice(i, 1);
+					this.addRayWithoutIntersections(new Ray(segment.p1, r.angle));
+					i--;
+					length--;
+				} else if (r.contains(segment.p2) && !r.start.equals(segment.p2)){
+					this.rays.splice(i, 1);
+					this.addRayWithoutIntersections(new Ray(segment.p2, r.angle));
+					i--;
+					length--;
+				}
+			}
+		}
+		length = this.lines.length;
+		for (i = 0; i < length; i++){
+			var l = this.lines[i];
+			if (segment.same(l)){
+				var ang1 = Utils.slopeToAngle(l.slope);
+				var ang2 = Utils.oppositeAngle(ang1);
+				var r1 = new Ray(segment.p1, ang1);
+				var r2 = new Ray(segment.p2, ang2);
+				if (r1.contains(segment.p2) || r2.contains(segment.p1)){
+					r1 = new Ray(segment.p1, ang2);
+					r2 = new Ray(segment.p2, ang1);
+				}
+				this.lines.splice(i, 1);
+				this.addRayWithoutIntersections(r1);
+				this.addRayWithoutIntersections(r2);
+				i--;
+				length--;
+			}
+		}
+	}
+	
+	AlDrawState.prototype.removeRay = function(ray){
+		var i, length;
+		length = this.segments.length;
+		for (i = 0; i < length; i++){
+			var s = this.segments[i];
+			if (ray.same(s)){
+				if (ray.contains(s.p1) && ray.contains(s.p2)){
+					this.segments.splice(i, 1);
+					i--;
+					length--;
+				} else if (ray.contains(s.p1)){
+					this.segments.splice(i, 1);
+					this.addSegmentWithoutIntersections(new Segment(s.p2, ray.start));
+					i--;
+					length--;
+				} else if (ray.contains(s.p2)){
+					this.segments.splice(i, 1);
+					this.addSegmentWithoutIntersections(new Segment(s.p1, ray.start));
+					i--;
+					length--;
+				}
+			}
+		}
+		length = this.rays.length;
+		for (i = 0; i < length; i++){
+			var r = this.rays[i];
+			if (ray.same(r)){
+				if (Utils.floatsEqual(ray.angle, r.angle)){
+					if (ray.contains(r.start)){
+						this.rays.splice(i, 1);
+						i--;
+						length--;
+					} else {
+						this.rays.splice(i, 1);
+						this.addSegmentWithoutIntersections(new Segment(ray.start, r.start));
+						i--;
+						length--;
+					}
+				} else {
+					if (ray.contains(r.start) && !ray.start.equals(r.start)){
+						this.rays.splice(i, 1);
+						this.addRayWithoutIntersections(new Ray(ray.start, r.angle));
+						i--;
+						length--;
+					}
+				}
+			}
+		}
+		length = this.lines.length;
+		for (i = 0; i < length; i++){
+			var l = this.lines[i];
+			if (ray.same(l)){
+				this.lines.splice(i, 1);
+				this.addRayWithoutIntersections(new Ray(ray.start, Utils.oppositeAngle(ray.angle)));
+				i--;
+				length--;
+			}
+		}
+	};
+	
+	AlDrawState.prototype.removeLine = function(line){
+		var i, length;
+		length = this.segments.length;
+		for (i = 0; i < length; i++){
+			var s = this.segments[i];
+			if (line.same(s)){
+				this.segments.splice(i, 1);
+				i--;
+				length--;
+			}
+		}
+		length = this.rays.length;
+		for (i = 0; i < length; i++){
+			var r = this.rays[i];
+			if (line.same(r)){
+				this.rays.splice(i, 1);
+				i--;
+				length--;
+			}
+		}
+		length = this.lines.length;
+		for (i = 0; i < length; i++){
+			var l = this.lines[i];
+			if (line.same(l)){
+				this.lines.splice(i, 1);
+				i--;
+				length--;
+			}
+		}
+	};
+	
+	AlDrawState.prototype.removeArc = function(arc){
+		var i, length;
+		length = this.arcs.length;
+		for (i = 0; i < length; i++){
+			var a = this.arcs[i];
+			if (arc.same(a)){
+				if (arc.equals(a) || a.isIn(arc)){
+					console.log("1st if");
+					this.arcs.splice(i, 1);
+					i--;
+					length--;
+				} else if (arc.isIn(a)){
+					console.log("2nd if");
+					this.arcs.splice(i, 1);
+					if (!Utils.floatsEqual(arc.start, a.start)){
+						this.addArcWithoutIntersections(new Arc(arc.center, arc.radius, a.start, Utils.angleDifference(arc.start, a.start)));
+					}
+					if (!Utils.floatsEqual(a.getEnd(), arc.getEnd())){
+						this.addArcWithoutIntersections(new Arc(arc.center, arc.radius, arc.getEnd(), Utils.angleDifference(a.getEnd(), arc.getEnd())));
+					}
+					i--;
+					length--;
+				} else if (Utils.angleDifference(arc.start, a.start) < a.sweep && Utils.angleDifference(arc.getEnd(), a.start) < a.sweep){
+					console.log("3rd if");
+					this.arcs.splice(i, 1);
+					this.addArcWithoutIntersections(new Arc(arc.center, arc.radius, arc.getEnd(), Utils.angleDifference(arc.start, arc.getEnd())));
+					i--;
+					length--;
+				} else if (Utils.angleDifference(arc.start, a.start) < a.sweep){
+					console.log("4th if");
+					this.arcs.splice(i, 1);
+					this.addArcWithoutIntersections(new Arc(arc.center, arc.radius, a.start, Utils.angleDifference(arc.start, a.start)));
+					i--;
+					length--;
+				} else if (Utils.angleDifference(arc.getEnd(), a.start) < a.sweep){
+					console.log("5th if");
+					this.arcs.splice(i, 1);
+					this.addArcWithoutIntersections(new Arc(arc.center, arc.radius, arc.getEnd(), Utils.angleDifference(a.getEnd(), arc.getEnd())));
+					i--;
+					length--;
+				}
+			}
+		}
+		length = this.circles.length;
+		for (i = 0; i < length; i++){
+			var c = this.circles[i];
+			if (arc.same(c)){
+				this.circles.splice(i, 1);
+				this.addArcWithoutIntersections(new Arc(arc.center, arc.radius, arc.getEnd(), Utils.angleDifference(2*Math.PI, arc.sweep)));
+				i--;
+				length--;
+			}
+		}
+	};
+	
+	AlDrawState.prototype.removeCircle = function(circle){
+		var i, length;
+		length = this.arcs.length;
+		for (i = 0; i < length; i++){
+			var a = this.arcs[i];
+			if (circle.same(a)){
+				this.arcs.splice(i, 1);
+				i--;
+				length--;
+			}
+		}
+		length = this.circles.length;
+		for (i = 0; i < length; i++){
+			var c = this.circles[i];
+			if (circle.same(c)){
+				this.circles.splice(i, 1);
+				i--;
+				length--;
+			}
+		}
+	};
+	
+	AlDrawState.prototype.removePoint = function(point){
+		var i, length;
+		length = this.points.length;
+		for (i = 0; i < length; i++){
+			if (point.equals(this.points[i])){
+				this.points.splice(i, 1);
+				i--;
+				length--;
+			}
+		}
 	};
 
 	AlDrawState.prototype.copy = function(){
@@ -877,6 +1348,42 @@ var AlDrawModule = (function(){
 	drawCircleInputStrategy.shadowHook = function(p1, p2){
 		//TODO This will require a little more thought
 	};
+	
+	var eraseSegmentInputStrategy = new InputStrategy("Erase Segment", 2);
+	
+	eraseSegmentInputStrategy.endHook = function(){
+		removeSegment(new Segment(selectedPoints[0], selectedPoints[1]));
+	};
+	
+	var eraseRayInputStrategy = new InputStrategy("Erase Ray", 2);
+	
+	eraseRayInputStrategy.endHook = function(){
+		removeRay(newRayFromTwoPoints(selectedPoints[0], selectedPoints[1]));
+	};
+	
+	var eraseLineInputStrategy = new InputStrategy("Erase Line", 2);
+	
+	eraseLineInputStrategy.endHook = function(){
+		removeLine(newLineFromTwoPoints(selectedPoints[0], selectedPoints[1]));
+	};
+	
+	var eraseArcInputStrategy = new InputStrategy("Erase Arc", 3);
+	
+	eraseArcInputStrategy.endHook = function(){
+		removeArc(newArcFromThreePoints(selectedPoints[0], selectedPoints[1], selectedPoints[2]));
+	};
+	
+	var eraseCircleInputStrategy = new InputStrategy("Erase Circle", 2);
+	
+	eraseCircleInputStrategy.endHook = function(){
+		removeCircle(new Circle(selectedPoints[0], selectedPoints[0].dist(selectedPoints[1])));
+	};
+	
+	var erasePointInputStrategy = new InputStrategy("Erase Point", 1);
+	
+	erasePointInputStrategy.endHook = function(){
+		removePoint(selectedPoints[0]);
+	};
 
 	function resizeCanvas(){
 		var canvas = document.getElementById("myCanvas");
@@ -891,7 +1398,7 @@ var AlDrawModule = (function(){
 	var currentState = new AlDrawState();
 	var converter = new CoordinateConverter();
 	currentState.start();
-	var inputStrategy = drawArcInputStrategy;
+	var inputStrategy = drawCircleInputStrategy;
 	var selectedPoints = [];
 	var ctx;
 	
@@ -961,6 +1468,54 @@ var AlDrawModule = (function(){
 		addState(newState);
 		updateView();
 	}
+	
+	function removeSegment(segment){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.removeSegment(segment);
+		addState(newState);
+		updateView();
+	}
+	
+	function removeRay(ray){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.removeRay(ray);
+		addState(newState);
+		updateView();
+	}
+	
+	function removeLine(line){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.removeLine(line);
+		addState(newState);
+		updateView();
+	}
+	
+	function removeArc(arc){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.removeArc(arc);
+		addState(newState);
+		updateView();
+	}
+	
+	function removeCircle(circle){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.removeCircle(circle);
+		addState(newState);
+		updateView();
+	}
+	
+	function removePoint(point){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.removePoint(point);
+		addState(newState);
+		updateView();
+	}
 
 	function addState(newState){
 		currentState.next = newState;
@@ -977,14 +1532,117 @@ var AlDrawModule = (function(){
 		}
 	}
 	
+	function getInputStrategy(){
+		return inputStrategy;
+	}
+	
+	function setDrawSegmentInputStrategy(){
+		inputStrategy = drawSegmentInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setDrawRayInputStrategy(){
+		inputStrategy = drawRayInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setDrawLineInputStrategy(){
+		inputStrategy = drawLineInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setDrawArcInputStrategy(){
+		inputStrategy = drawArcInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setDrawCircleInputStrategy(){
+		inputStrategy = drawCircleInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setEraseSegmentInputStrategy(){
+		inputStrategy = eraseSegmentInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setEraseRayInputStrategy(){
+		inputStrategy = eraseRayInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setEraseLineInputStrategy(){
+		inputStrategy = eraseLineInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setEraseArcInputStrategy(){
+		inputStrategy = eraseArcInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setEraseCircleInputStrategy(){
+		inputStrategy = eraseCircleInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function setErasePointInputStrategy(){
+		inputStrategy = erasePointInputStrategy;
+		selectedPoints = [];
+		updateView();
+	}
+	
+	function getCurrentState(){
+		return currentState;
+	}
+	
+	function undo(){
+		selectedPoints = [];
+		if (currentState.previous !== null){
+			currentState = currentState.previous;
+			updateView();
+		}
+	}
+	
+	function redo(){
+		selectedPoints = [];
+		if (currentState.next !== null){
+			currentState = currentState.next;
+			updateView();
+		}
+	}
+	
 	return {
 		converter: converter,
-		currentState: currentState,
-		inputStrategy: inputStrategy,
+		getCurrentState: getCurrentState,
+		getInputStrategy: getInputStrategy,
+		setDrawSegmentInputStrategy: setDrawSegmentInputStrategy,
+		setDrawRayInputStrategy: setDrawRayInputStrategy,
+		setDrawLineInputStrategy: setDrawLineInputStrategy,
+		setDrawArcInputStrategy: setDrawArcInputStrategy,
+		setDrawCircleInputStrategy: setDrawCircleInputStrategy,
+		setEraseSegmentInputStrategy: setEraseSegmentInputStrategy,
+		setEraseRayInputStrategy: setEraseRayInputStrategy,
+		setEraseLineInputStrategy: setEraseLineInputStrategy,
+		setEraseArcInputStrategy: setEraseArcInputStrategy,
+		setEraseCircleInputStrategy: setEraseCircleInputStrategy,
+		setErasePointInputStrategy: setErasePointInputStrategy,
 		setContext: setContext,
 		getContext: getContext,
 		resizeCanvas: resizeCanvas,
-		updateView: updateView
+		updateView: updateView,
+		undo: undo,
+		redo: redo
 	};
 })();
 
@@ -994,11 +1652,11 @@ $(document).ready(function(){
 	AlDrawModule.converter.conversionRatio = Math.min(AlDrawModule.converter.width, AlDrawModule.converter.height)/2;
 	AlDrawModule.setContext(canvas.getContext("2d"));
 	AlDrawModule.getContext().linewidth = 2;
-	AlDrawModule.currentState.draw(AlDrawModule.getContext(), AlDrawModule.converter);
+	AlDrawModule.getCurrentState().draw(AlDrawModule.getContext(), AlDrawModule.converter);
 	
 	$(window).resize(function(){
 		AlDrawModule.resizeCanvas();
-		AlDrawModule.currentState.draw(AlDrawModule.getContext(), AlDrawModule.converter);
+		AlDrawModule.getCurrentState().draw(AlDrawModule.getContext(), AlDrawModule.converter);
 	});
 	
 	$("#myCanvas").mousewheel(function(ev){
@@ -1011,18 +1669,18 @@ $(document).ready(function(){
 	});
 	
 	$("#myCanvas").mousedown(function(ev){
-		AlDrawModule.inputStrategy.press(ev.offsetX, ev.offsetY);
+		AlDrawModule.getInputStrategy().press(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").mouseup(function(ev){
-		AlDrawModule.inputStrategy.release(ev.offsetX, ev.offsetY);
+		AlDrawModule.getInputStrategy().release(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").click(function(ev){
-		AlDrawModule.inputStrategy.click(ev.offsetX, ev.offsetY);
+		AlDrawModule.getInputStrategy().click(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").mousemove(function(ev){
-		AlDrawModule.inputStrategy.drag(ev.offsetX, ev.offsetY);
+		AlDrawModule.getInputStrategy().drag(ev.offsetX, ev.offsetY);
 	});
 });

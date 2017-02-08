@@ -10,16 +10,28 @@
 			<div class="header"><h1>AlDraw</h1></div>
 			<div class="controls">
 				<span>
-					<input id="draw" type="radio" name="modeGroup" value="draw" checked><label for="draw">Draw</label>
-					<input id="erase" type="radio" name="modeGroup" value="erase"><label for="erase">Erase</label>
+					<input id="undo" type="button" value="Undo" onclick="AlDrawModule.undo()">
+					<input id="redo" type="button" value="Redo" onclick="AlDrawModule.redo()">
+				</span>
+				<span>
+					<input id="draw" type="radio" name="modeGroup" value="draw" onclick="$('#drawStrategies').show(); $('#eraseStrategies').hide();" checked><label for="draw">Draw</label>
+					<input id="erase" type="radio" name="modeGroup" value="erase" onclick="$('#drawStrategies').hide(); $('#eraseStrategies').show();"><label for="erase">Erase</label>
 				</span>
 				<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-				<span>
-					<input id="segment" type="radio" name="inputMode" value="segment"><label for="segment">Segment</label>
-					<input id="ray" type="radio" name="inputMode" value="ray"><label for="ray">Ray</label>
-					<input id="line" type="radio" name="inputMode" value="line"><label for="line">Line</label>
-					<input id="arc" type="radio" name="inputMode" value="arc"><label for="arc">Arc</label>
-					<input id="circle" type="radio" name="inputMode" value="circle" checked><label for="cirle">Circle</label>
+				<span id="drawStrategies">
+					<input id="drawSegment" type="radio" name="inputMode" value="segment" onclick="AlDrawModule.setDrawSegmentInputStrategy();"><label for="drawSegment">Segment</label>
+					<input id="drawRay" type="radio" name="inputMode" value="ray" onclick="AlDrawModule.setDrawRayInputStrategy();"><label for="drawRay">Ray</label>
+					<input id="drawLine" type="radio" name="inputMode" value="line" onclick="AlDrawModule.setDrawLineInputStrategy();"><label for="drawLine">Line</label>
+					<input id="drawArc" type="radio" name="inputMode" value="arc" onclick="AlDrawModule.setDrawArcInputStrategy();"><label for="drawArc">Arc</label>
+					<input id="drawCircle" type="radio" name="inputMode" value="circle" onclick="AlDrawModule.setDrawCircleInputStrategy();" checked><label for="drawCirle">Circle</label>
+				</span>
+				<span id="eraseStrategies" style="display: none;">
+					<input id="eraseSegment" type="radio" name="inputMode" value="segment" onclick="AlDrawModule.setEraseSegmentInputStrategy();"><label for="eraseSegment">Segment</label>
+					<input id="eraseRay" type="radio" name="inputMode" value="ray" onclick="AlDrawModule.setEraseRayInputStrategy();"><label for="eraseRay">Ray</label>
+					<input id="eraseLine" type="radio" name="inputMode" value="line" onclick="AlDrawModule.setEraseLineInputStrategy();"><label for="eraseLine">Line</label>
+					<input id="eraseArc" type="radio" name="inputMode" value="arc" onclick="AlDrawModule.setEraseArcInputStrategy();"><label for="eraseArc">Arc</label>
+					<input id="eraseCircle" type="radio" name="inputMode" value="circle" onclick="AlDrawModule.setEraseCircleInputStrategy();"><label for="eraseCirle">Circle</label>
+					<input id="erasePoint" type="radio" name="inputMode" value="point" onclick="AlDrawModule.setErasePointInputStrategy();"><label for="erasePoint">Point</label>
 				</span>
 			</div>
 			<div id="viewport" class="viewport">
