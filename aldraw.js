@@ -188,16 +188,6 @@ var AlDrawModule = (function(){
 		curvature: function(){
 			return 0;
 		},
-		closestPoint: function(p){
-			var slope = 0;
-			if (Utils.floatsEqual(this.getSlope(), 0)){
-				slope = Number.POSITIVE_INFINITY;
-			} else if (Number.isFinite(this.getSlope())){
-				slope = -1/this.getSlope();
-			}
-			var otherLine = newLineFromPointSlope(p, slope);
-			return this.intersectionLine(otherLine);
-		},
 		intersectLine: function(otherLine){
 			var m1 = this.getSlope();
 			var b1 = this.getIntercept();
@@ -315,6 +305,18 @@ var AlDrawModule = (function(){
 		return this.intercept;
 	};
 	
+	Line.prototype.closestPoint = function(p){
+		var slope = 0;
+		if (Utils.floatsEqual(this.getSlope(), 0)){
+			slope = Number.POSITIVE_INFINITY;
+		} else if (Number.isFinite(this.getSlope())){
+			slope = -1/this.getSlope();
+		}
+		var otherLine = newLineFromPointSlope(p, slope);
+		var intersection = this.intersectLine(otherLine);
+		return intersection[0];
+	};
+	
 	Line.prototype.contains = function(p){
 		if(!Number.isFinite(this.slope)){
 			return Utils.floatsEqual(this.intercept, p.x);
@@ -382,6 +384,22 @@ var AlDrawModule = (function(){
 			return this.start.y - slope*this.start.x;
 		}
 	};
+	
+	Ray.prototype.closestPoint = function(p){
+		var slope = 0;
+		if (Utils.floatsEqual(this.getSlope(), 0)){
+			slope = Number.POSITIVE_INFINITY;
+		} else if (Number.isFinite(this.getSlope())){
+			slope = -1/this.getSlope();
+		}
+		var otherLine = newLineFromPointSlope(p, slope);
+		var intersection = this.intersectLine(otherLine);
+		if (intersection.length > 0){
+			return intersection[0];
+		} else {
+			return this.start;
+		}
+	};
 		
 	Ray.prototype.contains = function(p){
 		var pAng = this.start.angle(p);
@@ -437,6 +455,24 @@ var AlDrawModule = (function(){
 			return this.p1.x;
 		}
 		return this.p1.y - m * this.p1.x;
+	};
+	
+	Segment.prototype.closestPoint = function(p){
+		var slope = 0;
+		if (Utils.floatsEqual(this.getSlope(), 0)){
+			slope = Number.POSITIVE_INFINITY;
+		} else if (Number.isFinite(this.getSlope())){
+			slope = -1/this.getSlope();
+		}
+		var otherLine = newLineFromPointSlope(p, slope);
+		var intersection = this.intersectLine(otherLine);
+		if (intersection.length > 0){
+			return intersection[0];
+		} else if (p.dist(this.p1) > p.dist(this.p2)){
+				return this.p2;
+		} else {
+			return this.p1;
+		}
 	};
 
 	Segment.prototype.contains = function(point){
@@ -1647,6 +1683,10 @@ var AlDrawModule = (function(){
 })();
 
 $(document).ready(function(){
+	$(".button").button();
+	$(".radioButton").checkboxradio({icon: false});
+	$(".radioButtonGroup").controlgroup();
+	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();
 	AlDrawModule.converter.conversionRatio = Math.min(AlDrawModule.converter.width, AlDrawModule.converter.height)/2;
