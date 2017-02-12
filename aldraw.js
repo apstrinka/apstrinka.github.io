@@ -673,6 +673,75 @@ var AlDrawModule = (function(){
 		this.cY -= (this.zoomAmt - 1) * d * Math.sin(angle);
 		this.conversionRatio = this.conversionRatio / this.zoomAmt;
 	};
+	
+	CoordinateConverter.prototype.autoZoom = function(state){
+		var minX, maxX, minY, maxY, i, length, point, q, c, arc, circle;
+		function updateMinMax(p){
+			if (p.x < minX){
+				minX = p.x;
+			}
+			if (p.x > maxX){
+				maxX = p.x;
+			}
+			if (p.y < minY){
+				minY = p.y;
+			}
+			if (p.y > maxY){
+				maxY = p.y;
+			}
+		}
+		point = state.points[0].rotateAroundOrigin(this.angle);
+		minX = maxX = point.x;
+		minY = maxY = point.y;
+		length = state.points.length;
+		for (i = 1; i < length; i++){
+			point = state.points[i].rotateAroundOrigin(this.angle);
+			updateMinMax(point);
+		}
+		length = state.arcs.length;
+		for (i = 0; i < length; i++){
+			arc = state.arcs[i];
+			c = arc.center.rotateAroundOrigin(this.angle);
+			point = c.translate(-arc.radius, 0);
+			q = point.rotateAroundOrigin(-this.angle);
+			if (arc.contains(q)){
+				updateMinMax(point);
+			}
+			point = c.translate(arc.radius, 0);
+			q = point.rotateAroundOrigin(-this.angle);
+			if (arc.contains(q)){
+				updateMinMax(point);
+			}
+			point = c.translate(0, -arc.radius);
+			q = point.rotateAroundOrigin(-this.angle);
+			if (arc.contains(q)){
+				updateMinMax(point);
+			}
+			point = c.translate(0, arc.radius);
+			q = point.rotateAroundOrigin(-this.angle);
+			if (arc.contains(q)){
+				updateMinMax(point);
+			}
+		}
+		length = state.circles.length;
+		for (i = 0; i < length; i++){
+			circle = state.circles[i];
+			c = circle.center.rotateAroundOrigin(this.angle);
+			point = c.translate(-circle.radius, 0);
+			updateMinMax(point);
+			point = c.translate(circle.radius, 0);
+			updateMinMax(point);
+			point = c.translate(0, -circle.radius);
+			updateMinMax(point);
+			point = c.translate(0, circle.radius);
+			updateMinMax(point);
+		}
+		this.conversionRatio = Math.min(this.width / (maxX - minX), this.height / (maxY - minY));
+		point = new Point((maxX + minX)/2, (maxY + minY)/2);
+		point = point.rotateAroundOrigin(-this.angle);
+		this.cX = point.x;
+		this.cY = point.y;
+	};
 
 	CoordinateConverter.prototype.abstractToScreenDist = function(d){
 		return d * this.conversionRatio;
@@ -1547,9 +1616,11 @@ var AlDrawModule = (function(){
 	
 	function removePoint(point){
 		selectedPoints = [];
-		var newState = currentState.copy();
-		newState.removePoint(point);
-		addState(newState);
+		if (currentState.points.length > 3){
+			var newState = currentState.copy();
+			newState.removePoint(point);
+			addState(newState);
+		}
 		updateView();
 	}
 
@@ -1658,6 +1729,11 @@ var AlDrawModule = (function(){
 		}
 	}
 	
+	function autoZoom(){
+		converter.autoZoom(currentState);
+		updateView();
+	}
+	
 	return {
 		converter: converter,
 		getCurrentState: getCurrentState,
@@ -1678,7 +1754,8 @@ var AlDrawModule = (function(){
 		resizeCanvas: resizeCanvas,
 		updateView: updateView,
 		undo: undo,
-		redo: redo
+		redo: redo,
+		autoZoom: autoZoom
 	};
 })();
 
