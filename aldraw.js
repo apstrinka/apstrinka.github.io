@@ -1386,6 +1386,8 @@ var AlDrawModule = (function(){
 		}
 	};
 
+	var inputStrategies = [];
+	
 	function InputStrategy(name, pointsNeeded){
 		this.name = name;
 		this.pointsNeeded = pointsNeeded;
@@ -1417,78 +1419,76 @@ var AlDrawModule = (function(){
 	};
 	
 	var drawSegmentInputStrategy = new InputStrategy("Draw Segment", 2);
-	
 	drawSegmentInputStrategy.endHook = function(){
 		addSegment(new Segment(selectedPoints[0], selectedPoints[1]));
 	};
+	inputStrategies.push(drawSegmentInputStrategy);
 	
 	var drawRayInputStrategy = new InputStrategy("Draw Ray", 2);
-	
 	drawRayInputStrategy.endHook = function(){
 		addRay(newRayFromTwoPoints(selectedPoints[0], selectedPoints[1]));
 	};
+	inputStrategies.push(drawRayInputStrategy);
 	
 	var drawLineInputStrategy = new InputStrategy("Draw Line", 2);
-	
 	drawLineInputStrategy.endHook = function(){
 		addLine(newLineFromTwoPoints(selectedPoints[0], selectedPoints[1]));
 	};
+	inputStrategies.push(drawLineInputStrategy);
 	
 	var drawArcInputStrategy = new InputStrategy("Draw Arc", 3);
-	
 	drawArcInputStrategy.endHook = function(){
 		addArc(newArcFromThreePoints(selectedPoints[0], selectedPoints[1], selectedPoints[2]));
 	};
+	inputStrategies.push(drawArcInputStrategy);
 
 	var drawCircleInputStrategy = new InputStrategy("Draw Circle", 2);
-
 	drawCircleInputStrategy.calculateCircle = function(p1, p2){
 		return new Circle(p1, p1.dist(p2));
 	};
-
 	drawCircleInputStrategy.endHook = function(){
 		addCircle(this.calculateCircle(selectedPoints[0], selectedPoints[1]));
 	};
-
 	drawCircleInputStrategy.shadowHook = function(p1, p2){
 		//TODO This will require a little more thought
 	};
+	inputStrategies.push(drawCircleInputStrategy);
 	
 	var eraseSegmentInputStrategy = new InputStrategy("Erase Segment", 2);
-	
 	eraseSegmentInputStrategy.endHook = function(){
 		removeSegment(new Segment(selectedPoints[0], selectedPoints[1]));
 	};
+	inputStrategies.push(eraseSegmentInputStrategy);
 	
 	var eraseRayInputStrategy = new InputStrategy("Erase Ray", 2);
-	
 	eraseRayInputStrategy.endHook = function(){
 		removeRay(newRayFromTwoPoints(selectedPoints[0], selectedPoints[1]));
 	};
+	inputStrategies.push(eraseRayInputStrategy);
 	
 	var eraseLineInputStrategy = new InputStrategy("Erase Line", 2);
-	
 	eraseLineInputStrategy.endHook = function(){
 		removeLine(newLineFromTwoPoints(selectedPoints[0], selectedPoints[1]));
 	};
+	inputStrategies.push(eraseLineInputStrategy);
 	
 	var eraseArcInputStrategy = new InputStrategy("Erase Arc", 3);
-	
 	eraseArcInputStrategy.endHook = function(){
 		removeArc(newArcFromThreePoints(selectedPoints[0], selectedPoints[1], selectedPoints[2]));
 	};
+	inputStrategies.push(eraseArcInputStrategy);
 	
 	var eraseCircleInputStrategy = new InputStrategy("Erase Circle", 2);
-	
 	eraseCircleInputStrategy.endHook = function(){
 		removeCircle(new Circle(selectedPoints[0], selectedPoints[0].dist(selectedPoints[1])));
 	};
+	inputStrategies.push(eraseCircleInputStrategy);
 	
 	var erasePointInputStrategy = new InputStrategy("Erase Point", 1);
-	
 	erasePointInputStrategy.endHook = function(){
 		removePoint(selectedPoints[0]);
 	};
+	inputStrategies.push(erasePointInputStrategy);
 
 	function resizeCanvas(){
 		var canvas = document.getElementById("myCanvas");
@@ -1643,74 +1643,27 @@ var AlDrawModule = (function(){
 		return inputStrategy;
 	}
 	
-	function setDrawSegmentInputStrategy(){
-		inputStrategy = drawSegmentInputStrategy;
+	function setInputStrategy(name){
 		selectedPoints = [];
-		updateView();
-	}
-	
-	function setDrawRayInputStrategy(){
-		inputStrategy = drawRayInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setDrawLineInputStrategy(){
-		inputStrategy = drawLineInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setDrawArcInputStrategy(){
-		inputStrategy = drawArcInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setDrawCircleInputStrategy(){
-		inputStrategy = drawCircleInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setEraseSegmentInputStrategy(){
-		inputStrategy = eraseSegmentInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setEraseRayInputStrategy(){
-		inputStrategy = eraseRayInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setEraseLineInputStrategy(){
-		inputStrategy = eraseLineInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setEraseArcInputStrategy(){
-		inputStrategy = eraseArcInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setEraseCircleInputStrategy(){
-		inputStrategy = eraseCircleInputStrategy;
-		selectedPoints = [];
-		updateView();
-	}
-	
-	function setErasePointInputStrategy(){
-		inputStrategy = erasePointInputStrategy;
-		selectedPoints = [];
+		var length = inputStrategies.length;
+		for (var i = 0; i < length; i++){
+			if (inputStrategies[i].name === name){
+				inputStrategy = inputStrategies[i];
+			}
+		}
 		updateView();
 	}
 	
 	function getCurrentState(){
 		return currentState;
+	}
+	
+	function clear(){
+		var newState = new AlDrawState();
+		newState.start();
+		addState(newState);
+		selectedPoints = [];
+		updateView();
 	}
 	
 	function undo(){
@@ -1738,21 +1691,12 @@ var AlDrawModule = (function(){
 		converter: converter,
 		getCurrentState: getCurrentState,
 		getInputStrategy: getInputStrategy,
-		setDrawSegmentInputStrategy: setDrawSegmentInputStrategy,
-		setDrawRayInputStrategy: setDrawRayInputStrategy,
-		setDrawLineInputStrategy: setDrawLineInputStrategy,
-		setDrawArcInputStrategy: setDrawArcInputStrategy,
-		setDrawCircleInputStrategy: setDrawCircleInputStrategy,
-		setEraseSegmentInputStrategy: setEraseSegmentInputStrategy,
-		setEraseRayInputStrategy: setEraseRayInputStrategy,
-		setEraseLineInputStrategy: setEraseLineInputStrategy,
-		setEraseArcInputStrategy: setEraseArcInputStrategy,
-		setEraseCircleInputStrategy: setEraseCircleInputStrategy,
-		setErasePointInputStrategy: setErasePointInputStrategy,
+		setInputStrategy: setInputStrategy,
 		setContext: setContext,
 		getContext: getContext,
 		resizeCanvas: resizeCanvas,
 		updateView: updateView,
+		clear: clear,
 		undo: undo,
 		redo: redo,
 		autoZoom: autoZoom
@@ -1760,6 +1704,7 @@ var AlDrawModule = (function(){
 })();
 
 $(document).ready(function(){
+	$(document).tooltip();
 	$(".button").button();
 	$(".radioButton").checkboxradio({icon: false});
 	$(".radioButtonGroup").controlgroup();

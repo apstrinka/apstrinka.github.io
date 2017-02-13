@@ -11,29 +11,40 @@
 			<div class="header"><h1>AlDraw</h1></div>
 			<div class="controls">
 				<span>
+					<input id="clear" class="button" type="button" value="Clear" onclick="AlDrawModule.clear()">
 					<input id="undo" class="button" type="button" value="Undo" onclick="AlDrawModule.undo()">
 					<input id="redo" class="button" type="button" value="Redo" onclick="AlDrawModule.redo()">
 					<input id="zoom" class="button" type="button" value="Zoom" onclick="AlDrawModule.autoZoom()">
 				</span>
 				<span class="radioButtonGroup">
-					<input id="draw" class="radioButton" type="radio" name="modeGroup" value="draw" onclick="$('#drawStrategies').show(); $('#eraseStrategies').hide();" checked><label for="draw">Draw</label>
-					<input id="erase" class="radioButton" type="radio" name="modeGroup" value="erase" onclick="$('#drawStrategies').hide(); $('#eraseStrategies').show();"><label for="erase">Erase</label>
+					<input id="draw" class="radioButton" type="radio" name="modeGroup" value="draw" onclick="$('.modeGroup').hide(); $('#drawStrategies').show();" checked><label for="draw">Draw</label>
+					<input id="erase" class="radioButton" type="radio" name="modeGroup" value="erase" onclick="$('.modeGroup').hide(); $('#eraseStrategies').show();"><label for="erase">Erase</label>
+					<input id="shortcuts" class="radioButton" type="radio" name="modeGroup" value="erase" onclick="$('.modeGroup').hide(); $('#shortcutStrategies').show();"><label for="shortcuts">Shortcuts</label>
 				</span>
 				<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-				<span id="drawStrategies" class="radioButtonGroup">
-					<input id="drawSegment" class="radioButton" type="radio" name="inputMode" value="segment" onclick="AlDrawModule.setDrawSegmentInputStrategy();"><label for="drawSegment">Segment</label>
-					<input id="drawRay" class="radioButton" type="radio" name="inputMode" value="ray" onclick="AlDrawModule.setDrawRayInputStrategy();"><label for="drawRay">Ray</label>
-					<input id="drawLine" class="radioButton" type="radio" name="inputMode" value="line" onclick="AlDrawModule.setDrawLineInputStrategy();"><label for="drawLine">Line</label>
-					<input id="drawArc" class="radioButton" type="radio" name="inputMode" value="arc" onclick="AlDrawModule.setDrawArcInputStrategy();"><label for="drawArc">Arc</label>
-					<input id="drawCircle" class="radioButton" type="radio" name="inputMode" value="circle" onclick="AlDrawModule.setDrawCircleInputStrategy();" checked><label for="drawCircle">Circle</label>
+				<span id="drawStrategies" class="radioButtonGroup modeGroup">
+					<input id="drawSegment" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Draw Segment');"><label for="drawSegment">Segment</label>
+					<input id="drawRay" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Draw Ray');"><label for="drawRay">Ray</label>
+					<input id="drawLine" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Draw Line');"><label for="drawLine">Line</label>
+					<input id="drawArc" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Draw Arc');"><label for="drawArc">Arc</label>
+					<input id="drawCircle" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Draw Circle');" checked><label for="drawCircle" title="Draw Circle"><img src="circle.svg" alt="Circle" style="width:10px; height:10px;"></label>
 				</span>
-				<span id="eraseStrategies" class="radioButtonGroup" style="display: none;">
-					<input id="eraseSegment" class="radioButton" type="radio" name="inputMode" value="segment" onclick="AlDrawModule.setEraseSegmentInputStrategy();"><label for="eraseSegment">Segment</label>
-					<input id="eraseRay" class="radioButton" type="radio" name="inputMode" value="ray" onclick="AlDrawModule.setEraseRayInputStrategy();"><label for="eraseRay">Ray</label>
-					<input id="eraseLine" class="radioButton" type="radio" name="inputMode" value="line" onclick="AlDrawModule.setEraseLineInputStrategy();"><label for="eraseLine">Line</label>
-					<input id="eraseArc" class="radioButton" type="radio" name="inputMode" value="arc" onclick="AlDrawModule.setEraseArcInputStrategy();"><label for="eraseArc">Arc</label>
-					<input id="eraseCircle" class="radioButton" type="radio" name="inputMode" value="circle" onclick="AlDrawModule.setEraseCircleInputStrategy();"><label for="eraseCircle">Circle</label>
-					<input id="erasePoint" class="radioButton" type="radio" name="inputMode" value="point" onclick="AlDrawModule.setErasePointInputStrategy();"><label for="erasePoint">Point</label>
+				<span id="eraseStrategies" class="radioButtonGroup modeGroup" style="display: none;">
+					<input id="eraseSegment" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Segment');"><label for="eraseSegment">Segment</label>
+					<input id="eraseRay" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Ray');"><label for="eraseRay">Ray</label>
+					<input id="eraseLine" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Line');"><label for="eraseLine">Line</label>
+					<input id="eraseArc" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Arc');"><label for="eraseArc">Arc</label>
+					<input id="eraseCircle" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Circle');"><label for="eraseCircle">Circle</label>
+					<input id="erasePoint" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Point');"><label for="erasePoint">Point</label>
+				</span>
+				<span id="shortcutStrategies" class="radioButtonGroup modeGroup" style="display: none;">
+					<input id="midpoint" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy();"><label for="midpoint">Midpoint</label>
+					<input id="trisect" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy();"><label for="trisect">Trisect</label>
+					<input id="perpendicularBisector" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy();"><label for="perpendicularBisector">Perpendicular Bisector</label>
+					<input id="tangent" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy();"><label for="tangent">Tangent</label>
+					<input id="parallel" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy();"><label for="parallel">Parallel</label>
+					<input id="circumscribe" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy();"><label for="circumscribe">Circumscribe</label>
+					<input id="compass" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy();"><label for="compass">Compass</label>
 				</span>
 			</div>
 			<div id="viewport" class="viewport">
