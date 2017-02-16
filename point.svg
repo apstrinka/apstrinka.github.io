@@ -11,12 +11,15 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="32px"
    height="32px"
-   id="svg2985"
+   id="svg4404"
    version="1.1"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="New document 2">
+   sodipodi:docname="point.svg"
+   inkscape:export-filename="C:\Users\Linka\Documents\GitHub\apstrinka.github.io\point.png"
+   inkscape:export-xdpi="200"
+   inkscape:export-ydpi="200">
   <defs
-     id="defs2987" />
+     id="defs4406" />
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -26,18 +29,22 @@
      inkscape:pageshadow="2"
      inkscape:zoom="20.3125"
      inkscape:cx="8.32"
-     inkscape:cy="16"
+     inkscape:cy="16.337875"
      inkscape:current-layer="layer1"
-     showgrid="true"
+     showgrid="false"
      inkscape:grid-bbox="true"
      inkscape:document-units="px"
      inkscape:window-width="1600"
      inkscape:window-height="837"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid4922" />
+  </sodipodi:namedview>
   <metadata
-     id="metadata2990">
+     id="metadata4409">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -54,16 +61,13 @@
      inkscape:groupmode="layer">
     <path
        sodipodi:type="arc"
-       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
-       id="path3769"
-       sodipodi:cx="16.123077"
-       sodipodi:cy="16.123077"
+       style="fill:#00ff00;fill-opacity:1;stroke:#00cc00;stroke-width:10.48156261;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path4412"
+       sodipodi:cx="15.975385"
+       sodipodi:cy="16.073847"
        sodipodi:rx="15.335384"
        sodipodi:ry="15.335384"
-       d="m 31.458387,16.075116 a 15.335384,15.335384 0 1 1 -1.19e-4,-0.02917"
-       sodipodi:start="6.2800578"
-       sodipodi:end="12.561341"
-       sodipodi:open="true"
-       transform="matrix(1.0094788,0,0,1.0094788,-0.2981876,-0.2981876)" />
+       d="m 31.310769,16.073847 a 15.335384,15.335384 0 1 1 -30.67076866,0 15.335384,15.335384 0 1 1 30.67076866,0 z"
+       transform="matrix(0.4859992,0,0,0.48599921,8.2359759,8.1881229)" />
   </g>
 </svg>

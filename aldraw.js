@@ -1713,12 +1713,12 @@ $(document).ready(function(){
 	AlDrawModule.resizeCanvas();
 	AlDrawModule.converter.conversionRatio = Math.min(AlDrawModule.converter.width, AlDrawModule.converter.height)/2;
 	AlDrawModule.setContext(canvas.getContext("2d"));
-	AlDrawModule.getContext().linewidth = 2;
-	AlDrawModule.getCurrentState().draw(AlDrawModule.getContext(), AlDrawModule.converter);
+	AlDrawModule.getContext().lineWidth = 2;
+	AlDrawModule.updateView();
 	
 	$(window).resize(function(){
 		AlDrawModule.resizeCanvas();
-		AlDrawModule.getCurrentState().draw(AlDrawModule.getContext(), AlDrawModule.converter);
+		AlDrawModule.updateView();
 	});
 	
 	$("#myCanvas").mousewheel(function(ev){

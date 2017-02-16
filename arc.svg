@@ -11,12 +11,12 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="32px"
    height="32px"
-   id="svg2985"
+   id="svg3771"
    version="1.1"
    inkscape:version="0.48.5 r10040"
-   sodipodi:docname="New document 2">
+   sodipodi:docname="New document 4">
   <defs
-     id="defs2987" />
+     id="defs3773" />
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -25,8 +25,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="20.3125"
-     inkscape:cx="8.32"
-     inkscape:cy="16"
+     inkscape:cx="2.8665216"
+     inkscape:cy="18.81184"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:grid-bbox="true"
@@ -37,7 +37,7 @@
      inkscape:window-y="-8"
      inkscape:window-maximized="1" />
   <metadata
-     id="metadata2990">
+     id="metadata3776">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -55,15 +55,15 @@
     <path
        sodipodi:type="arc"
        style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
-       id="path3769"
-       sodipodi:cx="16.123077"
-       sodipodi:cy="16.123077"
-       sodipodi:rx="15.335384"
-       sodipodi:ry="15.335384"
-       d="m 31.458387,16.075116 a 15.335384,15.335384 0 1 1 -1.19e-4,-0.02917"
-       sodipodi:start="6.2800578"
-       sodipodi:end="12.561341"
+       id="path3787"
+       sodipodi:cx="-0.049230769"
+       sodipodi:cy="32"
+       sodipodi:rx="31.556923"
+       sodipodi:ry="31.556923"
+       d="M 0.68439905,0.45160589 A 31.556923,31.556923 0 0 1 31.496177,31.147577"
+       sodipodi:start="4.7356389"
+       sodipodi:end="6.2561698"
        sodipodi:open="true"
-       transform="matrix(1.0094788,0,0,1.0094788,-0.2981876,-0.2981876)" />
+       transform="matrix(0.99378713,0,0,0.99378713,0.00114565,0.19662241)" />
   </g>
 </svg>
