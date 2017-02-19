@@ -1054,6 +1054,10 @@ var AlDrawModule = (function(){
 		this.circles.push(circle);
 	};
 	
+	AlDrawState.prototype.addPoint = function(point){
+		this.points.push(point);
+	};
+	
 	AlDrawState.prototype.removeSegment = function(segment){
 		var i, length;
 		length = this.segments.length;
@@ -1393,13 +1397,22 @@ var AlDrawModule = (function(){
 		this.pointsNeeded = pointsNeeded;
 	}
 
-	InputStrategy.prototype.shadowHook = function(p1, p2, p3){
+	InputStrategy.prototype.shadowHook1 = function(p1){
 		return []
+	};
+	
+	InputStrategy.prototype.shadowHook2 = function(p1, p2){
+		return this.shadowHook1(p1);
+	};
+	
+	InputStrategy.prototype.shadowHook3 = function(p1, p2, p3){
+		return this.shadowHook2(p1, p2);
 	};
 
 	InputStrategy.prototype.press = function(x, y){
 		selectNearestPoint(new Point(x, y));
 		if (selectedPoints.length === this.pointsNeeded){
+			shadows = [];
 			this.endHook();
 			selectedPoints = [];
 		}	
@@ -1415,80 +1428,261 @@ var AlDrawModule = (function(){
 	};
 
 	InputStrategy.prototype.drag = function(x, y){
-		//TODO...
+		var point = stickPoint(new Point(x, y));
+		if (selectedPoints.length === 0){
+			shadows = this.shadowHook1(point);
+		} else if (selectedPoints.length === 1){
+			shadows = this.shadowHook2(selectedPoints[0], point);
+		} else if (selectedPoints.length === 2){
+			shadows = this.shadowHook3(selectedPoints[0], selectedPoints[1], point);
+		}
+		updateView();
 	};
 	
 	var drawSegmentInputStrategy = new InputStrategy("Draw Segment", 2);
+	drawSegmentInputStrategy.shadowHook2 = function(p1, p2){
+		return [new Segment(p1, p2)];
+	};
 	drawSegmentInputStrategy.endHook = function(){
 		addSegment(new Segment(selectedPoints[0], selectedPoints[1]));
 	};
 	inputStrategies.push(drawSegmentInputStrategy);
 	
 	var drawRayInputStrategy = new InputStrategy("Draw Ray", 2);
+	drawRayInputStrategy.shadowHook2 = function(p1, p2){
+		return [newRayFromTwoPoints(p1, p2)];
+	};
 	drawRayInputStrategy.endHook = function(){
 		addRay(newRayFromTwoPoints(selectedPoints[0], selectedPoints[1]));
 	};
 	inputStrategies.push(drawRayInputStrategy);
 	
 	var drawLineInputStrategy = new InputStrategy("Draw Line", 2);
+	drawLineInputStrategy.shadowHook2 = function(p1, p2){
+		return [newLineFromTwoPoints(p1, p2)];
+	};
 	drawLineInputStrategy.endHook = function(){
 		addLine(newLineFromTwoPoints(selectedPoints[0], selectedPoints[1]));
 	};
 	inputStrategies.push(drawLineInputStrategy);
 	
 	var drawArcInputStrategy = new InputStrategy("Draw Arc", 3);
+	drawArcInputStrategy.shadowHook2 = function(p1, p2){
+		return [new Circle(p1, p1.dist(p2))];
+	};
+	drawArcInputStrategy.shadowHook3 = function(p1, p2, p3){
+		return [newArcFromThreePoints(p1, p2, p3)];
+	};
 	drawArcInputStrategy.endHook = function(){
 		addArc(newArcFromThreePoints(selectedPoints[0], selectedPoints[1], selectedPoints[2]));
 	};
 	inputStrategies.push(drawArcInputStrategy);
 
 	var drawCircleInputStrategy = new InputStrategy("Draw Circle", 2);
-	drawCircleInputStrategy.calculateCircle = function(p1, p2){
-		return new Circle(p1, p1.dist(p2));
+	drawCircleInputStrategy.shadowHook2 = function(p1, p2){
+		return [new Circle(p1, p1.dist(p2))];
 	};
 	drawCircleInputStrategy.endHook = function(){
-		addCircle(this.calculateCircle(selectedPoints[0], selectedPoints[1]));
-	};
-	drawCircleInputStrategy.shadowHook = function(p1, p2){
-		//TODO This will require a little more thought
+		addCircle(new Circle(selectedPoints[0], selectedPoints[0].dist(selectedPoints[1])));
 	};
 	inputStrategies.push(drawCircleInputStrategy);
 	
 	var eraseSegmentInputStrategy = new InputStrategy("Erase Segment", 2);
+	eraseSegmentInputStrategy.shadowHook2 = drawSegmentInputStrategy.shadowHook2;
 	eraseSegmentInputStrategy.endHook = function(){
 		removeSegment(new Segment(selectedPoints[0], selectedPoints[1]));
 	};
 	inputStrategies.push(eraseSegmentInputStrategy);
 	
 	var eraseRayInputStrategy = new InputStrategy("Erase Ray", 2);
+	eraseRayInputStrategy.shadowHook2 = drawRayInputStrategy.shadowHook2;
 	eraseRayInputStrategy.endHook = function(){
 		removeRay(newRayFromTwoPoints(selectedPoints[0], selectedPoints[1]));
 	};
 	inputStrategies.push(eraseRayInputStrategy);
 	
 	var eraseLineInputStrategy = new InputStrategy("Erase Line", 2);
+	eraseLineInputStrategy.shadowHook2 = drawLineInputStrategy.shadowHook2;
 	eraseLineInputStrategy.endHook = function(){
 		removeLine(newLineFromTwoPoints(selectedPoints[0], selectedPoints[1]));
 	};
 	inputStrategies.push(eraseLineInputStrategy);
 	
 	var eraseArcInputStrategy = new InputStrategy("Erase Arc", 3);
+	eraseArcInputStrategy.shadowHook2 = drawArcInputStrategy.shadowHook2;
+	eraseArcInputStrategy.shadowHook3 = drawArcInputStrategy.shadowHook3;
 	eraseArcInputStrategy.endHook = function(){
 		removeArc(newArcFromThreePoints(selectedPoints[0], selectedPoints[1], selectedPoints[2]));
 	};
 	inputStrategies.push(eraseArcInputStrategy);
 	
 	var eraseCircleInputStrategy = new InputStrategy("Erase Circle", 2);
+	eraseCircleInputStrategy.shadowHook2 = drawCircleInputStrategy.shadowHook2;
 	eraseCircleInputStrategy.endHook = function(){
 		removeCircle(new Circle(selectedPoints[0], selectedPoints[0].dist(selectedPoints[1])));
 	};
 	inputStrategies.push(eraseCircleInputStrategy);
 	
 	var erasePointInputStrategy = new InputStrategy("Erase Point", 1);
+	erasePointInputStrategy.shadowHook1 = function(p1){
+		return [p1];
+	};
 	erasePointInputStrategy.endHook = function(){
 		removePoint(selectedPoints[0]);
 	};
 	inputStrategies.push(erasePointInputStrategy);
+	
+	var midpointInputStrategy = new InputStrategy("Midpoint", 2);
+	midpointInputStrategy.shadowHook2 = function(p1, p2){
+		return [Utils.midPoint(p1, p2)];
+	};
+	midpointInputStrategy.endHook = function(){
+		addPoint(Utils.midPoint(selectedPoints[0], selectedPoints[1]));
+	};
+	inputStrategies.push(midpointInputStrategy);
+	
+	var trisectInputStrategy = new InputStrategy("Trisect", 2);
+	trisectInputStrategy.calculatePoints = function(p1, p2){
+		var dx = p2.x - p1.x;
+		var dy = p2.y - p1.y;
+		var x1 = p1.x + dx/3;
+		var y1 = p1.y + dy/3;
+		var x2 = p1.x + dx*2/3;
+		var y2 = p1.y + dy*2/3;
+		return [new Point(x1,  y1), new Point(x2, y2)];
+	};
+	trisectInputStrategy.shadowHook2 = function(p1, p2){
+		return this.calculatePoints(p1, p2);
+	};
+	trisectInputStrategy.endHook = function(){
+		addPoints(this.calculatePoints(selectedPoints[0], selectedPoints[1]));
+	};
+	inputStrategies.push(trisectInputStrategy);
+	
+	var perpendicularBisectorInputStrategy = new InputStrategy("Perpendicular Bisector", 2);
+	perpendicularBisectorInputStrategy.calculateLine = function(p1, p2){
+		var midpoint = Utils.midPoint(p1, p2);
+		var temp = newLineFromTwoPoints(p1, p2);
+		var slope = temp.getSlope();
+		return newLineFromPointSlope(midpoint, Utils.perpendicularSlope(slope));
+	};
+	perpendicularBisectorInputStrategy.shadowHook2 = function(p1, p2){
+		var line = this.calculateLine(p1, p2);
+		var point = Utils.midPoint(p1, p2);
+		return [line, point];
+	};
+	perpendicularBisectorInputStrategy.endHook = function(){
+		var midpoint = Utils.midPoint(selectedPoints[0], selectedPoints[1]);
+		var line = this.calculateLine(selectedPoints[0], selectedPoints[1]);
+		addPerpendicularBisector(midpoint, line);
+	};
+	inputStrategies.push(perpendicularBisectorInputStrategy);
+	
+	var angleBisectorInputStrategy = new InputStrategy("Angle Bisector", 3);
+	angleBisectorInputStrategy.calculateLine = function(p1, p2, p3){
+		var angle1 = p2.angle(p1);
+		var angle2 = p2.angle(p3);
+		var angle3 = (angle1 + angle2)/2;
+		var slope = Utils.angleToSlope(angle3);
+		return newLineFromPointSlope(p2, slope);
+	};
+	angleBisectorInputStrategy.shadowHook2 = function(p1, p2){
+		return [newLineFromTwoPoints(p1, p2)];
+	};
+	angleBisectorInputStrategy.shadowHook3 = function(p1, p2, p3){
+		return [this.calculateLine(p1, p2, p3)];
+	};
+	angleBisectorInputStrategy.endHook = function(){
+		addLine(this.calculateLine(selectedPoints[0], selectedPoints[1], selectedPoints[2]));
+	};
+	inputStrategies.push(angleBisectorInputStrategy);
+	
+	var tangentInputStrategy = new InputStrategy("Tangent Line", 2);
+	tangentInputStrategy.calculateLine = function(p1, p2){
+		var temp = newLineFromTwoPoints(p1, p2);
+		var slope = temp.getSlope();
+		return newLineFromPointSlope(p2, Utils.perpendicularSlope(slope));
+	};
+	tangentInputStrategy.shadowHook2 = function(p1, p2){
+		return [this.calculateLine(p1, p2)];
+	};
+	tangentInputStrategy.endHook = function(){
+		addLine(this.calculateLine(selectedPoints[0], selectedPoints[1]));
+	};
+	inputStrategies.push(tangentInputStrategy);
+	
+	var parallelInputStrategy = new InputStrategy("Parallel Line", 3);
+	parallelInputStrategy.calculateLine = function(p1, p2, p3){
+		var temp = newLineFromTwoPoints(p1, p2);
+		var slope = temp.getSlope();
+		return newLineFromPointSlope(p3, slope);
+	};
+	parallelInputStrategy.shadowHook2 = function(p1, p2){
+		return [newLineFromTwoPoints(p1, p2)];
+	};
+	parallelInputStrategy.shadowHook3 = function(p1, p2, p3){
+		return [this.calculateLine(p1, p2, p3)];
+	};
+	parallelInputStrategy.endHook = function(){
+		addLine(this.calculateLine(selectedPoints[0], selectedPoints[1], selectedPoints[2]));
+	};
+	inputStrategies.push(parallelInputStrategy);
+	
+	var circumscribeInputStrategy = new InputStrategy("Circumscribe Triangle", 3);
+	circumscribeInputStrategy.calculateCenter = function(p1, p2, p3){
+		var l1 = newLineFromTwoPoints(p1, p2);
+		l1 = newLineFromPointSlope(Utils.midPoint(p1, p2), Utils.perpendicularSlope(l1.getSlope()));
+		var l2 = newLineFromTwoPoints(p2, p3);
+		l2 = newLineFromPointSlope(Utils.midPoint(p2, p3), Utils.perpendicularSlope(l2.getSlope()));
+		var intersection = l1.intersectLine(l2);
+		if (intersection.length > 0){
+			return intersection[0];
+		} else {
+			return null;
+		}
+	};
+	circumscribeInputStrategy.shadowHook2 = function(p1, p2){
+		var center = Utils.midPoint(p1, p2);
+		var circle = new Circle(center, center.dist(p1));
+		return [center, circle];
+	};
+	circumscribeInputStrategy.shadowHook3 = function(p1, p2, p3){
+		var center = this.calculateCenter(p1, p2, p3);
+		if (center === null){
+			return [];
+		} else {
+			var circle = new Circle(center, center.dist(p1));
+			return [center, circle];
+		}
+	};
+	circumscribeInputStrategy.calculateCircle = function(p1, p2, p3){
+		var center = this.calculateCenter(p1, p2, p3);
+		if (center === null){
+			return null;
+		} else {
+			return new Circle(center, center.dist(p1));
+		}
+	};
+	circumscribeInputStrategy.endHook = function(){
+		var center = this.calculateCenter(selectedPoints[0], selectedPoints[1], selectedPoints[2]);
+		if (center !== null){
+			var circle = this.calculateCircle(selectedPoints[0], selectedPoints[1], selectedPoints[2]);
+			addPointAndCircle(center, circle);
+		}
+	};
+	inputStrategies.push(circumscribeInputStrategy);
+	
+	var compassInputStrategy = new InputStrategy("Compass", 3);
+	compassInputStrategy.shadowHook2 = function(p1, p2){
+		return [new Circle(p1, p1.dist(p2))];
+	};
+	compassInputStrategy.shadowHook3 = function(p1, p2, p3){
+		return [new Circle(p3, p1.dist(p2))];
+	};
+	compassInputStrategy.endHook = function(){
+		addCircle(new Circle(selectedPoints[2], selectedPoints[0].dist(selectedPoints[1])));
+	};
+	inputStrategies.push(compassInputStrategy);
 
 	function resizeCanvas(){
 		var canvas = document.getElementById("myCanvas");
@@ -1505,6 +1699,7 @@ var AlDrawModule = (function(){
 	currentState.start();
 	var inputStrategy = drawCircleInputStrategy;
 	var selectedPoints = [];
+	var shadows = [];
 	var ctx;
 	
 	function setContext(context){
@@ -1513,6 +1708,19 @@ var AlDrawModule = (function(){
 	
 	function getContext(){
 		return ctx;
+	}
+	
+	function initContext(){
+		ctx.lineWidth = 2;
+	};
+	
+	function stickPoint(p){
+		var fromScreenClick = converter.screenToAbstractCoord(p);
+		var nearest = currentState.nearestPoint(fromScreenClick);
+		if (converter.abstractToScreenDist(fromScreenClick.dist(nearest)) < 20)
+			return nearest;
+		else
+			return fromScreenClick;
 	}
 
 	function selectNearestPoint(p){
@@ -1574,6 +1782,25 @@ var AlDrawModule = (function(){
 		updateView();
 	}
 	
+	function addPoint(point){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.addPoint(point);
+		addState(newState);
+		updateView();
+	};
+	
+	function addPoints(points){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		var length = points.length;
+		for (var i = 0; i < length; i++){
+			newState.addPoint(points[i]);
+		}
+		addState(newState);
+		updateView();
+	};
+	
 	function removeSegment(segment){
 		selectedPoints = [];
 		var newState = currentState.copy();
@@ -1623,6 +1850,24 @@ var AlDrawModule = (function(){
 		}
 		updateView();
 	}
+	
+	function addPerpendicularBisector(point, line){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.addPoint(point);
+		newState.addLineWithIntersections(line);
+		addState(newState);
+		updateView();
+	}
+	
+	function addPointAndCircle(point, circle){
+		selectedPoints = [];
+		var newState = currentState.copy();
+		newState.addPoint(point);
+		newState.addCircleWithIntersections(circle);
+		addState(newState);
+		updateView();
+	}
 
 	function addState(newState){
 		currentState.next = newState;
@@ -1632,10 +1877,16 @@ var AlDrawModule = (function(){
 
 	function updateView(){
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		ctx.strokeStyle = 'black';
 		currentState.draw(ctx, converter);
 		var length = selectedPoints.length;
 		for (var i = 0; i < length; i++){
 			selectedPoints[i].draw(ctx, converter, new Color(255, 0, 0));
+		}
+		ctx.strokeStyle = 'lightgray';
+		length = shadows.length;
+		for (i = 0; i < length; i++){
+			shadows[i].draw(ctx, converter, new Color(190, 190, 190));
 		}
 	}
 	
@@ -1694,6 +1945,7 @@ var AlDrawModule = (function(){
 		setInputStrategy: setInputStrategy,
 		setContext: setContext,
 		getContext: getContext,
+		initContext: initContext,
 		resizeCanvas: resizeCanvas,
 		updateView: updateView,
 		clear: clear,
@@ -1713,11 +1965,12 @@ $(document).ready(function(){
 	AlDrawModule.resizeCanvas();
 	AlDrawModule.converter.conversionRatio = Math.min(AlDrawModule.converter.width, AlDrawModule.converter.height)/2;
 	AlDrawModule.setContext(canvas.getContext("2d"));
-	AlDrawModule.getContext().lineWidth = 2;
+	AlDrawModule.initContext();
 	AlDrawModule.updateView();
 	
 	$(window).resize(function(){
 		AlDrawModule.resizeCanvas();
+		AlDrawModule.initContext();
 		AlDrawModule.updateView();
 	});
 	

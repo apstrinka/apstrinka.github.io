@@ -27,6 +27,12 @@ html, body{
 	flex: 1 1 auto;
 }
 
+.buttonIcon {
+	height: 21px;
+	width: 21px;
+	display: block;
+}
+
 #myCanvas{
 	display: block;
 }
