@@ -18,10 +18,10 @@
 				</span>
 				<span class="radioButtonGroup">
 					<input id="draw" class="radioButton" type="radio" name="modeGroup" value="draw" onclick="$('.modeGroup').hide(); $('#drawStrategies').show();" checked><label for="draw">Draw</label>
-					<input id="erase" class="radioButton" type="radio" name="modeGroup" value="erase" onclick="$('.modeGroup').hide(); $('#eraseStrategies').show();"><label for="erase">Erase</label>
-					<input id="shortcuts" class="radioButton" type="radio" name="modeGroup" value="erase" onclick="$('.modeGroup').hide(); $('#shortcutStrategies').show();"><label for="shortcuts">Shortcuts</label>
+					<input id="erase" class="radioButton" type="radio" name="modeGroup" onclick="$('.modeGroup').hide(); $('#eraseStrategies').show();"><label for="erase">Erase</label>
+					<input id="shortcuts" class="radioButton" type="radio" name="modeGroup" onclick="$('.modeGroup').hide(); $('#shortcutStrategies').show();"><label for="shortcuts">Shortcuts</label>
+					<input id="color" class="radioButton" type="radio" name="modeGroup" onclick="$('.modeGroup').hide(); $('#colorStrategies').show();"><label for="color">Color</label>
 				</span>
-				<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 				<span id="drawStrategies" class="radioButtonGroup modeGroup">
 					<input id="drawSegment" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Draw Segment');"><label for="drawSegment" title="Draw Segment" style="padding:5px;"><img src="segment.svg" alt="Segment" class="buttonIcon"></label>
 					<input id="drawRay" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Draw Ray');"><label for="drawRay" title="Draw Ray" style="padding:5px;"><img src="ray.svg" alt="Ray" class="buttonIcon"></label>
@@ -46,6 +46,12 @@
 					<input id="parallel" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Parallel Line');"><label for="parallel" title="Parallel Line" style="padding:5px;"><img src="parallel.svg" alt="Parallel" class="buttonIcon"></label>
 					<input id="circumscribe" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Circumscribe Triangle');"><label for="circumscribe" title="Circumscribe Triangle" style="padding:5px;"><img src="circumscribe.svg" alt="Circumscribe" class="buttonIcon"></label>
 					<input id="compass" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Compass');"><label for="compass" title="Non-Collapsing Compass" style="padding:5px;"><img src="compass.svg" alt="Compass" class="buttonIcon"></label>
+				</span>
+				<span id="colorStrategies" class="radioButtonGroup modeGroup" style="display: none;">
+					<input id="fillColor" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Fill Color');"><label for="fillColor">Fill Color</label>
+					<input id="eraseColor" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Color');"><label for="eraseColor">Erase Color</label>
+					<input id="pickColor" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Pick Color');"><label for="pickColor">Pick Color</label>
+					<input id="chooseColor" type="color" value="#ff0000">
 				</span>
 			</div>
 			<div id="viewport" class="viewport">
