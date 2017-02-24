@@ -1105,7 +1105,7 @@ var AlDrawModule = (function(){
 		if (!pathable.isA("Arc")){
 			return false;
 		}
-		return this.equals(pathable) && this.inverse === other.inverse;
+		return this.equals(pathable) && this.inverse === pathable.inverse;
 	};
 	
 	Arc.prototype.isIn = function(otherArc){
@@ -1225,8 +1225,30 @@ var AlDrawModule = (function(){
 	};
 	
 	Enclosure.prototype.draw = function(context, converter){
-		console.log(this);
-		
+		context.fillStyle = this.color;
+		context.beginPath();
+		var point = converter.abstractToScreenCoord(this.path[0].startPoint());
+		context.moveTo(point.x, point.y);
+		for (var i = 0; i < this.path.length; i++){
+			var pathable = this.path[i];
+			if (pathable.isA("Segment")){
+				point = converter.abstractToScreenCoord(pathable.p2);
+				context.lineTo(point.x, point.y);
+			} else if (pathable.isA("Arc")){
+				point = converter.abstractToScreenCoord(pathable.center);
+				var radius = converter.abstractToScreenDist(pathable.radius);
+				if (pathable.inverse){
+					context.arc(point.x, point.y, radius, pathable.getEnd(), pathable.start, true);
+				} else {
+					context.arc(point.x, point.y, radius, pathable.start, pathable.getEnd(), false);
+				}
+			} else {
+				console.log(this.path);
+				console.log(pathable);
+			}
+		}
+		context.closePath();
+		context.fill();
 	};
 
 	function CoordinateConverter(){
@@ -2364,7 +2386,7 @@ var AlDrawModule = (function(){
 	};
 	inputStrategies.push(compassInputStrategy);
 	
-	var fillColorInputStrategy = new InputStrategy("Fill Color", 1);
+	var fillColorInputStrategy = new InputStrategy("Fill Color", 0);
 	fillColorInputStrategy.press = function(){};//Do nothing
 	fillColorInputStrategy.release = function(x, y){
 		var selPoint = converter.screenToAbstractCoord(new Point(x, y));
@@ -2379,6 +2401,32 @@ var AlDrawModule = (function(){
 	fillColorInputStrategy.click = function(){};
 	fillColorInputStrategy.drag = function(){};
 	inputStrategies.push(fillColorInputStrategy);
+	
+	var eraseColorInputStrategy = new InputStrategy("Erase Color", 0);
+	eraseColorInputStrategy.press = function(){};
+	eraseColorInputStrategy.release = function(x, y){
+		var selPoint = converter.screenToAbstractCoord(new Point(x, y));
+		addNewState(function(state){
+			state.removeEnclosure(selPoint);
+		});
+	};
+	eraseColorInputStrategy.click = function(){};
+	eraseColorInputStrategy.drag = function(){};
+	inputStrategies.push(eraseColorInputStrategy);
+	
+	var pickColorInputStrategy = new InputStrategy("Pick Color", 0);
+	pickColorInputStrategy.press = function(){};
+	pickColorInputStrategy.release = function(x, y){
+		var selPoint = converter.screenToAbstractCoord(new Point(x, y));
+		var enclosure = currentState.getTopEnclosure(selPoint);
+		if (enclosure !== null){
+			fillColor = enclosure.color;
+			$("#chooseColor").val(enclosure.color);
+		}
+	};
+	pickColorInputStrategy.click = function(){};
+	pickColorInputStrategy.drag = function(){};
+	inputStrategies.push(pickColorInputStrategy);
 
 	function resizeCanvas(){
 		var canvas = document.getElementById("myCanvas");
@@ -2396,8 +2444,12 @@ var AlDrawModule = (function(){
 	var inputStrategy = drawCircleInputStrategy;
 	var selectedPoints = [];
 	var shadows = [];
-	var fillColor = new Color(255, 0, 0);
+	var fillColor = "#ff0000";
 	var ctx;
+	
+	function setColor(color){
+		fillColor = color;
+	}
 	
 	function setContext(context){
 		ctx = context;
@@ -2521,6 +2573,7 @@ var AlDrawModule = (function(){
 		getCurrentState: getCurrentState,
 		getInputStrategy: getInputStrategy,
 		setInputStrategy: setInputStrategy,
+		setColor: setColor,
 		setContext: setContext,
 		getContext: getContext,
 		initContext: initContext,
@@ -2538,6 +2591,7 @@ $(document).ready(function(){
 	$(".button").button();
 	$(".radioButton").checkboxradio({icon: false});
 	$(".radioButtonGroup").controlgroup();
+	$("#chooseColor").button();
 	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();

@@ -49,9 +49,9 @@
 				</span>
 				<span id="colorStrategies" class="radioButtonGroup modeGroup" style="display: none;">
 					<input id="fillColor" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Fill Color');"><label for="fillColor">Fill Color</label>
-					<input id="eraseColor" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Color');"><label for="eraseColor">Erase Color</label>
-					<input id="pickColor" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Pick Color');"><label for="pickColor">Pick Color</label>
-					<input id="chooseColor" type="color" value="#ff0000">
+					<input id="eraseColor" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Erase Color');"><label for="eraseColor" title="Erase Color" style="padding:5px;"><img src="eraser.svg" alt="Eraser" class="buttonIcon"></label>
+					<input id="pickColor" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Pick Color');"><label for="pickColor" title="Pick Color" style="padding:5px;"><img src="eyedropper.svg" alt="Eye Dropper" class="buttonIcon"></label>
+					<input id="chooseColor" type="color" value="#ff0000" onchange="AlDrawModule.setColor(this.value)" style="height:26px; width:26px; padding:2px;">
 				</span>
 			</div>
 			<div id="viewport" class="viewport">
