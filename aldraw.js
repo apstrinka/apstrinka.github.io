@@ -2016,35 +2016,39 @@ var AlDrawModule = (function(){
 		return newState;
 	};
 
-	AlDrawState.prototype.draw = function(context, converter){
+	AlDrawState.prototype.draw = function(context, converter, showLines, showPoints){
 		var i, length;
 		length = this.enclosures.length;
 		for (i = 0; i < length; i++){
 			this.enclosures[i].draw(context, converter);
 		}
-		length = this.segments.length;
-		for (i = 0; i < length; i++){
-			this.segments[i].draw(context, converter);
+		if (showLines){
+			length = this.segments.length;
+			for (i = 0; i < length; i++){
+				this.segments[i].draw(context, converter);
+			}
+			length = this.rays.length;
+			for (i = 0; i < length; i++){
+				this.rays[i].draw(context, converter);
+			}
+			length = this.lines.length;
+			for (i = 0; i < length; i++){
+				this.lines[i].draw(context, converter);
+			}
+			length = this.arcs.length;
+			for (i = 0; i < length; i++){
+				this.arcs[i].draw(context, converter);
+			}
+			length = this.circles.length;
+			for (i = 0; i < length; i++){
+				this.circles[i].draw(context, converter);
+			}
 		}
-		length = this.rays.length;
-		for (i = 0; i < length; i++){
-			this.rays[i].draw(context, converter);
-		}
-		length = this.lines.length;
-		for (i = 0; i < length; i++){
-			this.lines[i].draw(context, converter);
-		}
-		length = this.arcs.length;
-		for (i = 0; i < length; i++){
-			this.arcs[i].draw(context, converter);
-		}
-		length = this.circles.length;
-		for (i = 0; i < length; i++){
-			this.circles[i].draw(context, converter);
-		}
-		length = this.points.length;
-		for (i = 0; i < length; i++){
-			this.points[i].draw(context, converter);
+		if (showPoints){
+			length = this.points.length;
+			for (i = 0; i < length; i++){
+				this.points[i].draw(context, converter);
+			}
 		}
 	};
 
@@ -2445,6 +2449,8 @@ var AlDrawModule = (function(){
 	var selectedPoints = [];
 	var shadows = [];
 	var fillColor = "#ff0000";
+	var showLines = true;
+	var showPoints = true;
 	var ctx;
 	
 	function setColor(color){
@@ -2508,7 +2514,7 @@ var AlDrawModule = (function(){
 	function updateView(){
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 		ctx.strokeStyle = 'black';
-		currentState.draw(ctx, converter);
+		currentState.draw(ctx, converter, showLines, showPoints);
 		var length = selectedPoints.length;
 		for (var i = 0; i < length; i++){
 			selectedPoints[i].draw(ctx, converter, new Color(255, 0, 0));
@@ -2568,6 +2574,24 @@ var AlDrawModule = (function(){
 		updateView();
 	}
 	
+	function setDefaultView(){
+		converter.conversionRatio = Math.min(converter.width, converter.height)/2;
+		converter.cX = 0;
+		converter.cY = 0;
+		converter.angle = 0;
+		updateView();
+	}
+	
+	function setShowLines(show){
+		showLines = show;
+		updateView();
+	}
+	
+	function setShowPoints(show){
+		showPoints = show;
+		updateView();
+	}
+	
 	return {
 		converter: converter,
 		getCurrentState: getCurrentState,
@@ -2582,16 +2606,19 @@ var AlDrawModule = (function(){
 		clear: clear,
 		undo: undo,
 		redo: redo,
-		autoZoom: autoZoom
+		autoZoom: autoZoom,
+		setDefaultView: setDefaultView,
+		setShowLines: setShowLines,
+		setShowPoints: setShowPoints
 	};
 })();
 
 $(document).ready(function(){
 	$(document).tooltip();
 	$(".button").button();
+	$("#chooseColor").button();
 	$(".radioButton").checkboxradio({icon: false});
 	$(".radioButtonGroup").controlgroup();
-	$("#chooseColor").button();
 	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();
