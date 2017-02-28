@@ -88,6 +88,12 @@ var AlDrawModule = (function(){
 			a = Utils.normalizeAngle(a);
 			return a;
 		},
+		toRadians: function(d){
+			return d*Math.PI/180;
+		},
+		toDegrees: function(r){
+			return r*180/Math.PI;
+		},
 		arrayContains: function(arr, x){
 			var length = arr.length;
 			for (var i = 0; i < length; i++){
@@ -2431,6 +2437,49 @@ var AlDrawModule = (function(){
 	pickColorInputStrategy.click = function(){};
 	pickColorInputStrategy.drag = function(){};
 	inputStrategies.push(pickColorInputStrategy);
+	
+	var panInputStrategy = new InputStrategy("Pan", 0);
+	panInputStrategy.oldPoint = null;
+	panInputStrategy.press = function(x, y){
+		this.oldPoint = converter.screenToAbstractCoord(new Point(x, y));
+	};
+	panInputStrategy.release = function(x, y){
+		this.oldPoint = null;
+	};
+	panInputStrategy.click = function(){};
+	panInputStrategy.drag = function(x, y){
+		if (this.oldPoint !== null){
+			var diff = converter.screenToAbstractCoord(new Point(x, y));
+			var xDiff = diff.x - this.oldPoint.x;
+			var yDiff = diff.y - this.oldPoint.y;
+			converter.cX = converter.cX - xDiff;
+			converter.cY = converter.cY - yDiff;
+			updateView();
+		}
+	};
+	inputStrategies.push(panInputStrategy);
+	
+	var rotateInputStrategy = new InputStrategy("Rotate", 0);
+	rotateInputStrategy.oldAngle = null;
+	rotateInputStrategy.press = function(x, y){
+		var center = new Point(converter.cX, converter.cY);
+		this.oldAngle = center.angle(converter.screenToAbstractCoord(new Point(x, y)));
+	};
+	rotateInputStrategy.release = function(x, y){
+		this.oldAngle = null;
+	};
+	rotateInputStrategy.click = function(){};
+	rotateInputStrategy.drag = function(x, y){
+		if (this.oldAngle !== null){
+			var center = new Point(converter.cX, converter.cY);
+			var newAngle = center.angle(converter.screenToAbstractCoord(new Point(x, y)));
+			var diff = newAngle - this.oldAngle;
+			converter.angle = Utils.angleSum(converter.angle, diff);
+			updateView();
+			$('#angle').val(Utils.toDegrees(converter.angle));
+		}
+	};
+	inputStrategies.push(rotateInputStrategy);
 
 	function resizeCanvas(){
 		var canvas = document.getElementById("myCanvas");
@@ -2532,6 +2581,7 @@ var AlDrawModule = (function(){
 	
 	function setInputStrategy(name){
 		selectedPoints = [];
+		shadows = [];
 		var length = inputStrategies.length;
 		for (var i = 0; i < length; i++){
 			if (inputStrategies[i].name === name){
