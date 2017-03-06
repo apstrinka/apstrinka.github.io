@@ -143,6 +143,10 @@ var AlDrawModule = (function(){
 		this.x = x;
 		this.y = y;
 	}
+	
+	Point.fromObject = function(obj){
+		return new Point(obj.x, obj.y);
+	};
 
 	Point.prototype.dist = function(otherPoint){
 		return Math.hypot(this.x - otherPoint.x, this.y - otherPoint.y);
@@ -318,6 +322,31 @@ var AlDrawModule = (function(){
 				ret.sort(function(a, b){
 					return comparePathables(axis, side, a, b);
 				});
+				
+				if (this.isA("arc") && Utils.floatsEqual(this.sweep, 2*Math.PI)){
+					var atStart = [];
+					var pathables = state.getPathables();
+					for (var i = 0; i < pathables.length; i++){
+						var s = pathables[i];
+						var intersections = this.intersect(s);
+						for (var j = 0; j < intersections.length; j++){
+							if (intersections[j] !== null && intersections[j].equals(this.startPoint())){
+								var t = s.divide(intersections[j]);
+								for (var k = 0; k < t.length; k++){
+									if (this.comparePathableTo(t[k]) === side){
+										atStart.push(t[k]);
+									}
+								}
+							}
+						}
+					}
+					atStart.sort(function(a, b){
+						return comparePathables(axis, side, a, b);
+					});
+					ret = ret.concat(atStart);
+					ret.push(new Arc(this.center, this.radius, this.start, this.sweep, this.inverse));
+				}
+				
 				return ret;
 			}
 	};
@@ -429,6 +458,10 @@ var AlDrawModule = (function(){
 		this.slope = slope;
 		this.intercept = intercept; //This is the y-intercept, unless the line is vertical
 	}
+	
+	Line.fromObject = function(obj){
+		return new Line(obj.slope, obj.intercept);
+	};
 	
 	Line.fromTwoPoints = function(p1, p2){
 		var slope, intercept;
@@ -547,6 +580,10 @@ var AlDrawModule = (function(){
 		this.start = start;
 		this.angle = angle;
 	}
+	
+	Ray.fromObject = function(obj){
+		return new Ray(Point.fromObject(obj.start), obj.angle);
+	};
 	
 	Ray.fromTwoPoints = function(p1, p2){
 		var angle = p1.angle(p2);
@@ -692,6 +729,10 @@ var AlDrawModule = (function(){
 		this.p2 = p2;
 	}
 	
+	Segment.fromObject = function(obj){
+		return new Segment(Point.fromObject(obj.p1), Point.fromObject(obj.p2));
+	};
+	
 	Segment.prototype = Object.create(abstractLine);
 	
 	Segment.prototype.isA = function(name){
@@ -825,6 +866,10 @@ var AlDrawModule = (function(){
 		this.radius = radius;
 	}
 	
+	Circle.fromObject = function(obj){
+		return new Circle(Point.fromObject(obj.center), obj.radius);
+	};
+	
 	Circle.prototype = Object.create(pathableBase);
 	
 	Circle.prototype.isA = function(name){
@@ -954,6 +999,10 @@ var AlDrawModule = (function(){
 		}
 	}
 	
+	Arc.fromObject = function(obj){
+		return new Arc(Point.fromObject(obj.center), obj.radius, obj.start, obj.sweep, obj.inverse);
+	};
+	
 	Arc.fromThreePoints = function(p1, p2, p3){
 		var center = p1;
 		var radius = p1.dist(p2);
@@ -1060,39 +1109,6 @@ var AlDrawModule = (function(){
 		return ret;
 	};
 	
-	Arc.prototype.getIntersectionsInOrder = function(side, state){
-		//TODO:
-		//It should be possible to combine this with the other getIntersectionsInOrder
-		//Just add if (this.isA("Arc")...
-		var sup = pathableBase.getIntersectionsInOrder;
-		var ret = sup.call(this, side, state);
-		if (Utils.floatsEqual(this.sweep, 2*Math.PI)){
-			var atStart = [];
-			var pathables = state.getPathables();
-			for (var i = 0; i < pathables.length; i++){
-				var s = pathables[i];
-				var intersections = this.intersect(s);
-				for (var j = 0; j < intersections.length; j++){
-					if (intersections[j] !== null && intersections[j].equals(this.startPoint())){
-						var t = s.divide(intersections[j]);
-						for (var k = 0; k < t.length; k++){
-							if (this.comparePathableTo(t[k]) === side){
-								atStart.push(t[k]);
-							}
-						}
-					}
-				}
-			}
-			var axis = this;
-			atStart.sort(function(a, b){
-				return comparePathables(this, side, a, b);
-			});
-			ret = ret.concat(atStart);
-			ret.push(new Arc(this.center, this.radius, this.start, this.sweep, this.inverse));
-		}
-		return ret;
-	};
-	
 	Arc.prototype.shortened = function(pathable){
 		var startAngle = this.start;
 		var endAngle = this.center.angle(pathable.startPoint());
@@ -1145,6 +1161,22 @@ var AlDrawModule = (function(){
 		this.path = path;
 		this.color = color;
 	}
+	
+	Enclosure.fromObject = function(obj){
+		var path = [];
+		var length = obj.path.length;
+		for (var i = 0; i < length; i++){
+			var pathable = obj.path[i];
+			if (pathable.p1 !== undefined){
+				path.push(Segment.fromObject(pathable));
+			} else if (pathable.sweep !== undefined){
+				path.push(Arc.fromObject(pathable));
+			} else {
+				console.log("This should never happen (Enclosure.fromObject)");
+			}
+		}
+		return new Enclosure(path, obj.color);
+	};
 	
 	Enclosure.findEnclosure = function(selPoint, state){
 		var i, j, length, length2;
@@ -1243,10 +1275,14 @@ var AlDrawModule = (function(){
 			} else if (pathable.isA("Arc")){
 				point = converter.abstractToScreenCoord(pathable.center);
 				var radius = converter.abstractToScreenDist(pathable.radius);
+				var end = pathable.getEnd();
+				if (Utils.floatsEqual(pathable.sweep, 2*Math.PI)){
+					end = pathable.start + 2*Math.PI;
+				}
 				if (pathable.inverse){
-					context.arc(point.x, point.y, radius, pathable.getEnd(), pathable.start, true);
+					context.arc(point.x, point.y, radius, end, pathable.start, true);
 				} else {
-					context.arc(point.x, point.y, radius, pathable.start, pathable.getEnd(), false);
+					context.arc(point.x, point.y, radius, pathable.start, end, false);
 				}
 			} else {
 				console.log(this.path);
@@ -1272,6 +1308,21 @@ var AlDrawModule = (function(){
 		this.angle = 0;
 		this.zoomAmt = 1.2;
 	}
+	
+	CoordinateConverter.prototype.setValues = function(obj){
+		if (obj.cX !== undefined){
+			this.cX = obj.cX;
+		}
+		if (obj.cY !== undefined){
+			this.cY = obj.cY;
+		}
+		if (obj.conversionRatio !== undefined){
+			this.conversionRatio = obj.conversionRatio;
+		}
+		if (obj.angle !== undefined){
+			this.angle = obj.angle;
+		}
+	};
 	
 	CoordinateConverter.prototype.getAbstractBoundaries = function(){
 		var upperLeft = this.screenToAbstractCoord(new Point(0, 0));
@@ -1400,6 +1451,10 @@ var AlDrawModule = (function(){
 		a.y = a.y / this.conversionRatio + this.cY;
 		return a;
 	};
+	
+	CoordinateConverter.prototype.toJSON = function(){
+		return {cX: this.cX, cY: this.cY, conversionRatio: this.conversionRatio, angle: this.angle};
+	};
 
 	function AlDrawState(){
 		this.enclosures = [];
@@ -1412,6 +1467,40 @@ var AlDrawModule = (function(){
 		this.next = null;
 		this.previous = null;
 	}
+	
+	AlDrawState.fromObject = function(obj){
+		var ret = new AlDrawState();
+		var i, length;
+		length = obj.enclosures.length;
+		for (i = 0; i < length; i++){
+			ret.enclosures.push(Enclosure.fromObject(obj.enclosures[i]));
+		}
+		length = obj.segments.length;
+		for (i = 0; i < length; i++){
+			ret.segments.push(Segment.fromObject(obj.segments[i]));
+		}
+		length = obj.rays.length;
+		for (i = 0; i < length; i++){
+			ret.rays.push(Ray.fromObject(obj.rays[i]));
+		}
+		length = obj.lines.length;
+		for (i = 0; i < length; i++){
+			ret.lines.push(Line.fromObject(obj.lines[i]));
+		}
+		length = obj.arcs.length;
+		for (i = 0; i < length; i++){
+			ret.arcs.push(Arc.fromObject(obj.arcs[i]));
+		}
+		length = obj.circles.length;
+		for (i = 0; i < length; i++){
+			ret.circles.push(Circle.fromObject(obj.circles[i]));
+		}
+		length = obj.points.length;
+		for (i = 0; i < length; i++){
+			ret.points.push(Point.fromObject(obj.points[i]));
+		}
+		return ret;
+	};
 
 	AlDrawState.prototype.start = function(){
 		var i, initRad = 1;
@@ -2057,6 +2146,18 @@ var AlDrawModule = (function(){
 			}
 		}
 	};
+	
+	AlDrawState.prototype.toJSON = function(){
+		return {
+			enclosures: this.enclosures,
+			segments: this.segments,
+			rays: this.rays,
+			lines: this.lines,
+			arcs: this.arcs,
+			circles: this.circles,
+			points: this.points
+		};
+	};
 
 	var inputStrategies = [];
 	
@@ -2476,7 +2577,6 @@ var AlDrawModule = (function(){
 			var diff = newAngle - this.oldAngle;
 			converter.angle = Utils.angleSum(converter.angle, diff);
 			updateView();
-			$('#angle').val(Utils.toDegrees(converter.angle));
 		}
 	};
 	inputStrategies.push(rotateInputStrategy);
@@ -2501,6 +2601,10 @@ var AlDrawModule = (function(){
 	var showLines = true;
 	var showPoints = true;
 	var ctx;
+	var saves = {};
+	if (localStorage.getItem('saves') !== null){
+		saves = JSON.parse(localStorage.getItem('saves'));
+	}
 	
 	function setColor(color){
 		fillColor = color;
@@ -2573,6 +2677,7 @@ var AlDrawModule = (function(){
 		for (i = 0; i < length; i++){
 			shadows[i].draw(ctx, converter, new Color(190, 190, 190));
 		}
+		$('#angle').val(Utils.toDegrees(converter.angle));
 	}
 	
 	function getInputStrategy(){
@@ -2632,6 +2737,15 @@ var AlDrawModule = (function(){
 		updateView();
 	}
 	
+	function setAngle(value){
+		var angle = Number(value);
+		console.log(angle);
+		if (angle !== NaN){
+			converter.angle = Utils.toRadians(angle);
+		}
+		updateView();
+	}
+	
 	function setShowLines(show){
 		showLines = show;
 		updateView();
@@ -2639,6 +2753,20 @@ var AlDrawModule = (function(){
 	
 	function setShowPoints(show){
 		showPoints = show;
+		updateView();
+	}
+	
+	function save(name){
+		var save = {state: currentState, converter: converter};
+		saves[name] = save;
+		localStorage.setItem("saves", JSON.stringify(saves));
+	}
+	
+	function load(name){
+		var save = saves[name];
+		converter.setValues(save.converter);
+		var newState = AlDrawState.fromObject(save.state);
+		addState(newState);
 		updateView();
 	}
 	
@@ -2658,8 +2786,11 @@ var AlDrawModule = (function(){
 		redo: redo,
 		autoZoom: autoZoom,
 		setDefaultView: setDefaultView,
+		setAngle: setAngle,
 		setShowLines: setShowLines,
-		setShowPoints: setShowPoints
+		setShowPoints: setShowPoints,
+		save: save,
+		load: load
 	};
 })();
 

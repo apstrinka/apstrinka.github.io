@@ -61,15 +61,15 @@
 						<input id="pan" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Pan');"><label for="pan">Pan</label>
 						<input id="rotate" class="radioButton" type="radio" name="inputMode" onclick="AlDrawModule.setInputStrategy('Rotate');"><label for="rotate">Rotate</label>
 					</span>
-					<label for="angle">Angle:</label><input id="angle" type="number" value="0.0" style="height:25px;width:6em;">
+					<label for="angle">Angle:</label><input id="angle" type="number" value="0" style="height:25px;width:6em;" onchange="AlDrawModule.setAngle(this.value);">
 					<span class="radioButtonGroup">
 						<input id="showLines" class="radioButton" type="checkbox" onclick="AlDrawModule.setShowLines(this.checked);" checked><label for="showLines">Show Lines</label>
 						<input id="showPoints" class="radioButton" type="checkbox" onclick="AlDrawModule.setShowPoints(this.checked);" checked><label for="showPoints">Show Points</label>
 					</span>
 				</span>
 				<span id="fileButtons" class="modeGroup" style="display: none;">
-					<input id="save" class="button" type="button" value="Save">
-					<input id="load" class="button" type="button" value="Load">
+					<input id="save" class="button" type="button" value="Save" onclick="AlDrawModule.save('autosave');">
+					<input id="load" class="button" type="button" value="Load" onclick="AlDrawModule.load('autosave');">
 				</span>
 			</div>
 			<div id="viewport" class="viewport">
