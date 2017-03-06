@@ -2800,6 +2800,7 @@ $(document).ready(function(){
 	$("#chooseColor").button();
 	$(".radioButton").checkboxradio({icon: false});
 	$(".radioButtonGroup").controlgroup();
+	$("#saveDialog").dialog({autoOpen: false});
 	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();

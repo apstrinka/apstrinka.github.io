@@ -68,12 +68,16 @@
 					</span>
 				</span>
 				<span id="fileButtons" class="modeGroup" style="display: none;">
-					<input id="save" class="button" type="button" value="Save" onclick="AlDrawModule.save('autosave');">
-					<input id="load" class="button" type="button" value="Load" onclick="AlDrawModule.load('autosave');">
+					<input id="showSaveDialog" class="button" type="button" value="Save/Load" onclick="$('#saveDialog').dialog('open');">
 				</span>
 			</div>
 			<div id="viewport" class="viewport">
 				<canvas id="myCanvas"></canvas>
+			</div>
+			<div id="saveDialog" title="Save/Load">
+				<input id="filename" type="text">
+				<input id="save" class="button" type="button" value="Save" onclick="AlDrawModule.save($('#filename').val());$('#saveDialog').dialog('close');">
+				<input id="load" class="button" type="button" value="Load" onclick="AlDrawModule.load($('#filename').val());$('#saveDialog').dialog('close');">
 			</div>
 		</div>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
