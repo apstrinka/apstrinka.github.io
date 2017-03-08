@@ -2770,6 +2770,24 @@ var AlDrawModule = (function(){
 		updateView();
 	}
 	
+	function saveAsPNG(){
+		var canvas = document.getElementById("myCanvas");
+		var newCanvas = document.createElement("canvas");
+		newCanvas.width = canvas.width;
+		newCanvas.height = canvas.height;
+		var newContext = newCanvas.getContext("2d");
+		newContext.lineWidth = 2;
+		currentState.draw(newContext, converter, showLines, false);
+		var url = newCanvas.toDataURL("image/png");
+		var link = document.createElement("a");
+		link.download = "aldraw.png";
+		link.href = url;
+		link.click();
+	}
+	
+	function saveAsSVG(){
+	}
+	
 	return {
 		converter: converter,
 		getCurrentState: getCurrentState,
@@ -2790,7 +2808,9 @@ var AlDrawModule = (function(){
 		setShowLines: setShowLines,
 		setShowPoints: setShowPoints,
 		save: save,
-		load: load
+		load: load,
+		saveAsPNG: saveAsPNG,
+		saveAsSVG: saveAsSVG
 	};
 })();
 
