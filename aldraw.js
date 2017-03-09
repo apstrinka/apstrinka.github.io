@@ -2786,6 +2786,98 @@ var AlDrawModule = (function(){
 	}
 	
 	function saveAsSVG(){
+		function writeSegment(segment){
+			var p1 = converter.abstractToScreenCoord(segment.p1);
+			var p2 = converter.abstractToScreenCoord(segment.p2);
+			return '<line x1="' + p1.x + '" y1="' + p1.y + '" x2="' + p2.x + '" y2="' + p2.y + '" style="stroke:#000000;"/>';
+		}
+		var radius, end, largearc, sweepflag;
+		var str = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' + converter.width + 'px" height="' + converter.height + 'px">'
+		var length = currentState.enclosures.length;
+		for (var i = 0; i < length; i++){
+			var e = currentState.enclosures[i];
+			var p = converter.abstractToScreenCoord(e.path[0].startPoint());
+			str += '<path d="M ' + p.x + ' ' + p.y;
+			for (var j = 0; j < e.path.length; j++){
+				var pathable = e.path[j];
+				if (pathable.isA("Segment")){
+					p = converter.abstractToScreenCoord(pathable.p2);
+					str += ' L ' + p.x + ' ' + p.y;
+				} else {
+					if (Utils.floatsEqual(pathable.sweep, 2*Math.PI)){
+						var mid = converter.abstractToScreenCoord(pathable.getPointAtAngle(Utils.angleSum(pathable.start, Math.PI)));
+						end = converter.abstractToScreenCoord(pathable.getPointAtAngle(pathable.start));
+						radius = converter.abstractToScreenDist(pathable.radius);
+						sweepflag = 1;
+						if (pathable.inverse){
+							sweepflag = 0;
+						}
+						str += ' A ' + radius + ' ' + radius + ' 0 0 ' + sweepflag + ' ' + mid.x + ' ' + mid.y;
+						str += ' A ' + radius + ' ' + radius + ' 0 1 ' + sweepflag + ' ' + end.x + ' ' + end.y;
+					} else {
+						end = converter.abstractToScreenCoord(pathable.getPointAtAngle(pathable.getEnd()));
+						radius = converter.abstractToScreenDist(pathable.radius);
+						largearc = 0;
+						if (pathable.sweep > Math.PI)
+							largearc = 1;
+						sweepflag = 1;
+						if (pathable.inverse)
+						{
+							end = converter.abstractToScreenCoord(pathable.getPointAtAngle(pathable.start));
+							sweepflag = 0;
+						}
+						str += ' A ' + radius + ' ' + radius + ' 0 ' + largearc + ' ' + sweepflag + ' ' + end.x + ' ' + end.y;
+					}
+				}
+			}
+			str += '" fill="' + e.color + '" fill-rule="evenodd" stroke="none"/>';
+		}
+		length = currentState.segments.length;
+		for (i = 0; i < length; i++){
+			var s = currentState.segments[i];
+			str += writeSegment(s);
+		}
+		length = currentState.rays.length;
+		for (i = 0; i < length; i++){
+			var r = currentState.rays[i];
+			s = r.getPortionInsideRectangle(converter.getAbstractBoundaries());
+			if (s !== null){
+				str += writeSegment(s);
+			}
+		}
+		length = currentState.lines.length;
+		for (i = 0; i < length; i++){
+			var l = currentState.lines[i];
+			s = l.getPortionInsideRectangle(converter.getAbstractBoundaries());
+			if (s !== null){
+				str += writeSegment(s);
+			}
+		}
+		length = currentState.arcs.length;
+		for (i = 0; i < length; i++){
+			var a = currentState.arcs[i];
+			var start = converter.abstractToScreenCoord(a.getPointAtAngle(a.start));
+			end = converter.abstractToScreenCoord(a.getPointAtAngle(a.getEnd()));
+			radius = converter.abstractToScreenDist(a.radius);
+			largearc = 0;
+			if (a.sweep > Math.PI)
+				largearc = 1;
+			str += '<path d="M' + start.x + ' ' + start.y + ' A' + radius + ' ' + radius + ' 0 ' + largearc + ' 1 ' + end.x + ' ' + end.y + '" style="stroke:#000000; fill:none"/>';
+		}
+		length = currentState.circles.length;
+		for (i = 0; i < length; i++){
+			var c = currentState.circles[i];
+			var center = converter.abstractToScreenCoord(c.center);
+			radius = converter.abstractToScreenDist(c.radius);
+			str += '<circle cx="' + center.x + '" cy="' + center.y + '" r="' + radius + '" style="stroke:#000000; fill:none"/>';
+		}
+		str += '</svg>';
+		var blob = new Blob([str]);
+		var url = window.URL.createObjectURL(blob);
+		var link = document.createElement("a");
+		link.download = "aldraw.svg";
+		link.href = url;
+		link.click();
 	}
 	
 	return {
