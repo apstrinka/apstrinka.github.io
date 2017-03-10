@@ -1,5 +1,17 @@
 "use strict";
 
+if (!String.prototype.endsWith) {
+  String.prototype.endsWith = function(searchString, position) {
+      var subjectString = this.toString();
+      if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+        position = subjectString.length;
+      }
+      position -= searchString.length;
+      var lastIndex = subjectString.lastIndexOf(searchString, position);
+      return lastIndex !== -1 && lastIndex === position;
+  };
+}
+
 var AlDrawModule = (function(){
 	var Utils = {
 		defaultTolerance: 0.00001,
@@ -2770,7 +2782,7 @@ var AlDrawModule = (function(){
 		updateView();
 	}
 	
-	function saveAsPNG(){
+	function saveAsPNG(name){
 		var canvas = document.getElementById("myCanvas");
 		var newCanvas = document.createElement("canvas");
 		newCanvas.width = canvas.width;
@@ -2780,12 +2792,17 @@ var AlDrawModule = (function(){
 		currentState.draw(newContext, converter, showLines, false);
 		var url = newCanvas.toDataURL("image/png");
 		var link = document.createElement("a");
-		link.download = "aldraw.png";
+		if (name === ''){
+			name = 'aldraw.png';
+		} else if (!name.endsWith('.png')){
+			name += '.png';
+		}
+		link.download = name;
 		link.href = url;
 		link.click();
 	}
 	
-	function saveAsSVG(){
+	function saveAsSVG(name){
 		function writeSegment(segment){
 			var p1 = converter.abstractToScreenCoord(segment.p1);
 			var p2 = converter.abstractToScreenCoord(segment.p2);
@@ -2875,7 +2892,12 @@ var AlDrawModule = (function(){
 		var blob = new Blob([str]);
 		var url = window.URL.createObjectURL(blob);
 		var link = document.createElement("a");
-		link.download = "aldraw.svg";
+		if (name === ''){
+			name = 'aldraw.svg';
+		} else if (!name.endsWith('.svg')){
+			name += '.svg';
+		}
+		link.download = name;
 		link.href = url;
 		link.click();
 	}
@@ -2906,6 +2928,17 @@ var AlDrawModule = (function(){
 	};
 })();
 
+function clickModeGroup(val){
+	$('.modeGroup').hide();
+	$('.' + val).show();
+	AlDrawModule.setInputStrategy($('[name="' + val + '"]:checked').val());
+}
+
+function markChecked(id){
+	document.getElementById(id).checked = true;
+	$('.relatedButtons').checkboxradio("refresh");
+}
+
 $(document).ready(function(){
 	$(document).tooltip();
 	$(".button").button();
@@ -2913,6 +2946,7 @@ $(document).ready(function(){
 	$(".radioButton").checkboxradio({icon: false});
 	$(".radioButtonGroup").controlgroup();
 	$("#saveDialog").dialog({autoOpen: false});
+	$("#downloadDialog").dialog({autoOpen: false});
 	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();
