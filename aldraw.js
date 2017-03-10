@@ -1151,8 +1151,10 @@ var AlDrawModule = (function(){
 	Arc.prototype.draw = function(context, converter){
 		var p = converter.abstractToScreenCoord(this.center);
 		var screenRadius = converter.abstractToScreenDist(this.radius);
+		var start = Utils.angleSum(this.start, converter.angle);
+		var end = Utils.angleSum(this.getEnd(), converter.angle);
 		context.beginPath();
-		context.arc(p.x, p.y, screenRadius, this.start, this.getEnd());
+		context.arc(p.x, p.y, screenRadius, start, end);
 		context.stroke();
 	};
 	
@@ -1287,14 +1289,15 @@ var AlDrawModule = (function(){
 			} else if (pathable.isA("Arc")){
 				point = converter.abstractToScreenCoord(pathable.center);
 				var radius = converter.abstractToScreenDist(pathable.radius);
-				var end = pathable.getEnd();
+				var start = Utils.angleSum(pathable.start, converter.angle);
+				var end = Utils.angleSum(pathable.getEnd(), converter.angle);
 				if (Utils.floatsEqual(pathable.sweep, 2*Math.PI)){
 					end = pathable.start + 2*Math.PI;
 				}
 				if (pathable.inverse){
-					context.arc(point.x, point.y, radius, end, pathable.start, true);
+					context.arc(point.x, point.y, radius, end, start, true);
 				} else {
-					context.arc(point.x, point.y, radius, pathable.start, end, false);
+					context.arc(point.x, point.y, radius, start, end, false);
 				}
 			} else {
 				console.log(this.path);
