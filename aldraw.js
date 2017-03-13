@@ -1468,7 +1468,7 @@ var AlDrawModule = (function(){
 	};
 	
 	CoordinateConverter.prototype.toJSON = function(){
-		return {cX: this.cX, cY: this.cY, conversionRatio: this.conversionRatio, angle: this.angle};
+		return {cX: this.cX, cY: this.cY, conversionRatio: this.conversionRatio, angle: this.angle, height: this.height, width: this.width};
 	};
 
 	function AlDrawState(){
@@ -2771,18 +2771,89 @@ var AlDrawModule = (function(){
 		updateView();
 	}
 	
+	var hasSaveDialogBeenGenerated = false;
+	
+	function generateSaveDialog(){
+		if (!hasSaveDialogBeenGenerated){
+			var saveDialog = document.getElementById('saveDialogContents');
+			for (var prop in saves){
+				var save = saves[prop];
+				var input = document.createElement('input');
+				input.id = 'saveDialogInput' + prop;
+				input.value = prop;
+				input.className = 'saveDialogRadio';
+				input.setAttribute('type', 'radio');
+				input.setAttribute('name', 'saveDialogRadio');
+				input.onclick = function(){
+					document.getElementById('saveFilename').value = this.value;
+				};
+				var label = document.createElement('label');
+				label.setAttribute('for', 'saveDialogInput' + prop);
+				var labelText = document.createElement('div');
+				labelText.innerHTML = prop;
+				var newCanvas = document.createElement('canvas');
+				var size = 100;
+				newCanvas.height = size;
+				newCanvas.width = size;
+				var newContext = newCanvas.getContext("2d");
+				newContext.lineWidth = 2;
+				var newConverter = new CoordinateConverter();
+				newConverter.height = size;
+				newConverter.width = size;
+				newConverter.setValues(save.converter);
+				newConverter.conversionRatio = newConverter.conversionRatio * size / Math.min(save.converter.height, save.converter.width);
+				var newState = AlDrawState.fromObject(save.state);
+				newState.draw(newContext, newConverter, true, false);
+				label.appendChild(labelText);
+				label.appendChild(newCanvas);
+				saveDialog.appendChild(input);
+				saveDialog.appendChild(label);
+			}
+			$('.saveDialogRadio').checkboxradio({icon: false});
+			hasSaveDialogBeenGenerated = true;
+		}
+	}
+	
+	function clearSaveDialog(){
+		hasSaveDialogBeenGenerated = false;
+		var saveDialog = document.getElementById('saveDialogContents');
+		var clone = saveDialog.cloneNode(false);
+		saveDialog.parentNode.replaceChild(clone, saveDialog);
+	}
+	
 	function save(name){
 		var save = {state: currentState, converter: converter};
-		saves[name] = save;
-		localStorage.setItem("saves", JSON.stringify(saves));
+		console.log(JSON.stringify(converter));
+		if (saves[name] === undefined || confirm('Are you sure you want to overwrite ' + name + '?')){
+			saves[name] = save;
+			localStorage.setItem("saves", JSON.stringify(saves));
+			$('#saveDialog').dialog('close');
+			clearSaveDialog();
+		}
 	}
 	
 	function load(name){
 		var save = saves[name];
-		converter.setValues(save.converter);
-		var newState = AlDrawState.fromObject(save.state);
-		addState(newState);
-		updateView();
+		if (save === undefined){
+			alert('There is no save named ' + name + '.');
+		} else {
+			console.log(save.converter);
+			converter.setValues(save.converter);
+			console.log(converter);
+			var newState = AlDrawState.fromObject(save.state);
+			addState(newState);
+			updateView();
+			$('#saveDialog').dialog('close');
+		}
+	}
+	
+	function deleteSave(name){
+		if (confirm('Are you sure you want to delete ' + name + '?')){
+			delete saves[name];
+			localStorage.setItem("saves", JSON.stringify(saves));
+			clearSaveDialog();
+			generateSaveDialog();
+		}
 	}
 	
 	function saveAsPNG(name){
@@ -2924,8 +2995,10 @@ var AlDrawModule = (function(){
 		setAngle: setAngle,
 		setShowLines: setShowLines,
 		setShowPoints: setShowPoints,
+		generateSaveDialog: generateSaveDialog,
 		save: save,
 		load: load,
+		deleteSave, deleteSave,
 		saveAsPNG: saveAsPNG,
 		saveAsSVG: saveAsSVG
 	};
@@ -2948,7 +3021,7 @@ $(document).ready(function(){
 	$("#chooseColor").button();
 	$(".radioButton").checkboxradio({icon: false});
 	$(".radioButtonGroup").controlgroup();
-	$("#saveDialog").dialog({autoOpen: false});
+	$("#saveDialog").dialog({autoOpen: false, height: 400, width: 400});
 	$("#downloadDialog").dialog({autoOpen: false});
 	
 	var canvas = document.getElementById("myCanvas");
