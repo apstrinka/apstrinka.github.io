@@ -1467,6 +1467,17 @@ var AlDrawModule = (function(){
 		return a;
 	};
 	
+	CoordinateConverter.prototype.copy = function(){
+		var ret = new CoordinateConverter();
+		ret.cX = this.cX;
+		ret.cY = this.cY;
+		ret.conversionRatio = this.conversionRatio;
+		ret.anlge = this.angle;
+		ret.height = this.height;
+		ret.width = this.width;
+		return ret;
+	};
+	
 	CoordinateConverter.prototype.toJSON = function(){
 		return {cX: this.cX, cY: this.cY, conversionRatio: this.conversionRatio, angle: this.angle, height: this.height, width: this.width};
 	};
@@ -2752,6 +2763,16 @@ var AlDrawModule = (function(){
 		updateView();
 	}
 	
+	function zoomIn(){
+		converter.conversionRatio = converter.conversionRatio * converter.zoomAmt;
+		updateView();
+	}
+	
+	function zoomOut(){
+		converter.conversionRatio = converter.conversionRatio / converter.zoomAmt;
+		updateView();
+	}
+	
 	function setAngle(value){
 		var angle = Number(value);
 		console.log(angle);
@@ -2796,7 +2817,7 @@ var AlDrawModule = (function(){
 				newCanvas.height = size;
 				newCanvas.width = size;
 				var newContext = newCanvas.getContext("2d");
-				newContext.lineWidth = 2;
+				//newContext.lineWidth = 2;
 				var newConverter = new CoordinateConverter();
 				newConverter.height = size;
 				newConverter.width = size;
@@ -2822,7 +2843,7 @@ var AlDrawModule = (function(){
 	}
 	
 	function save(name){
-		var save = {state: currentState, converter: converter};
+		var save = {state: currentState, converter: converter.copy()};
 		console.log(JSON.stringify(converter));
 		if (saves[name] === undefined || confirm('Are you sure you want to overwrite ' + name + '?')){
 			saves[name] = save;
@@ -2992,6 +3013,8 @@ var AlDrawModule = (function(){
 		redo: redo,
 		autoZoom: autoZoom,
 		setDefaultView: setDefaultView,
+		zoomIn: zoomIn,
+		zoomOut: zoomOut,
 		setAngle: setAngle,
 		setShowLines: setShowLines,
 		setShowPoints: setShowPoints,
@@ -3021,7 +3044,7 @@ $(document).ready(function(){
 	$("#chooseColor").button();
 	$(".radioButton").checkboxradio({icon: false});
 	$(".radioButtonGroup").controlgroup();
-	$("#saveDialog").dialog({autoOpen: false, height: 400, width: 400});
+	$("#saveDialog").dialog({autoOpen: false, height: 400, width: 460});
 	$("#downloadDialog").dialog({autoOpen: false});
 	
 	var canvas = document.getElementById("myCanvas");

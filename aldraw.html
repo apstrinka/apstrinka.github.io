@@ -57,12 +57,14 @@
 					<input id="chooseColor" type="color" value="#ff0000" onchange="AlDrawModule.setColor(this.value)" style="height:26px; width:26px; padding:2px;">
 				</span>
 				<span id="viewButtons" class="modeGroup viewMode" style="display: none;">
-					<input id="default" class="button" type="button" value="Default" onclick="AlDrawModule.setDefaultView();">
 					<span class="radioButtonGroup">
 						<input id="pan" class="radioButton" type="radio" name="viewMode" value="Pan" onclick="AlDrawModule.setInputStrategy(this.value);"><label for="pan" title="Pan" style="padding:5px;"><img src="pan.svg" alt="Pan" class="buttonIcon"></label>
 						<input id="rotate" class="radioButton" type="radio" name="viewMode" value="Rotate" onclick="AlDrawModule.setInputStrategy(this.value);" checked><label for="rotate" title="Rotate" style="padding:5px;"><img src="rotate.svg" alt="Rotate" class="buttonIcon"></label>
 					</span>
 					<label for="angle">Angle:</label><input id="angle" type="number" value="0" style="height:25px;width:6em;" onchange="AlDrawModule.setAngle(this.value);">
+					<input id="default" class="button" type="button" value="Default" onclick="AlDrawModule.setDefaultView();">
+					<input id="zoomIn" class="button" type="button" value="Zoom In" onclick="AlDrawModule.zoomIn();">
+					<input id="zoomOut" class="button" type="button" value="Zoom Out" onclick="AlDrawModule.zoomOut();">
 					<span class="radioButtonGroup">
 						<input id="showLines" class="radioButton" type="checkbox" onclick="AlDrawModule.setShowLines(this.checked);" checked><label for="showLines">Show Lines</label>
 						<input id="showPoints" class="radioButton" type="checkbox" onclick="AlDrawModule.setShowPoints(this.checked);" checked><label for="showPoints">Show Points</label>
@@ -73,16 +75,26 @@
 				<canvas id="myCanvas"></canvas>
 			</div>
 			<div id="saveDialog" title="Save/Load">
-				<input id="saveFilename" type="text">
-				<input id="save" class="button" type="button" value="Save" onclick="AlDrawModule.save($('#saveFilename').val());">
-				<input id="load" class="button" type="button" value="Load" onclick="AlDrawModule.load($('#saveFilename').val());">
-				<input id="delete" class="button" type="button" value="Delete" onclick="AlDrawModule.deleteSave($('#saveFilename').val());">
+				<div style="text-align:center;">
+					<label for="saveFilename">Name:</label>
+					<input id="saveFilename" type="text">
+				</div>
+				<div style="text-align:center;margin-top:5px;margin-bottom:5px;">
+					<input id="save" class="button" type="button" value="Save" onclick="AlDrawModule.save($('#saveFilename').val());">
+					<input id="load" class="button" type="button" value="Load" onclick="AlDrawModule.load($('#saveFilename').val());">
+					<input id="delete" class="button" type="button" value="Delete" onclick="AlDrawModule.deleteSave($('#saveFilename').val());">
+				</div>
 				<div id="saveDialogContents"></div>
 			</div>
 			<div id="downloadDialog" title="Download">
-				<input id="downloadFilename" type="text">
-				<input id="saveAsPNG" class="button" type="button" value="PNG" onclick="AlDrawModule.saveAsPNG($('#downloadFilename').val());">
-				<input id="saveAsSVG" class="button" type="button" value="SVG" onclick="AlDrawModule.saveAsSVG($('#downloadFilename').val());">
+				<div style="text-align:center;">
+					<label for="downloadFilename">Name:</label>
+					<input id="downloadFilename" type="text">
+				</div>
+				<div style="text-align:center;margin-top:5px;">
+					<input id="saveAsPNG" class="button" type="button" value="PNG" onclick="AlDrawModule.saveAsPNG($('#downloadFilename').val());">
+					<input id="saveAsSVG" class="button" type="button" value="SVG" onclick="AlDrawModule.saveAsSVG($('#downloadFilename').val());">
+				</div>
 			</div>
 		</div>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
