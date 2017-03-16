@@ -15,8 +15,8 @@
 					<input id="undo" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.undo()" title="Undo" style="padding:5px;height:30px;width:30px;background-image:url(undo.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
 					<input id="undo" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.redo()" title="Redo" style="padding:5px;height:30px;width:30px;background-image:url(redo.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
 					<input id="zoom" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.autoZoom()" title="Zoom to Fit" style="padding:5px;height:30px;width:30px;background-image:url(magnifyingglass.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
-					<input id="showSaveDialog" class="button" type="button" onclick="AlDrawModule.generateSaveDialog();$('#saveDialog').dialog('open');" title="Save/Load" style="padding:5px;height:30px;width:30px;background-image:url(folder.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
-					<input id="download" class="button" type="button" onclick="$('#downloadDialog').dialog('open');" title="Download" style="padding:5px;height:30px;width:30px;background-image:url(download.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
+					<input id="showSaveDialog" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.generateSaveDialog();$('#saveDialog').dialog('open');" title="Save/Load" style="padding:5px;height:30px;width:30px;background-image:url(folder.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
+					<input id="download" class="ui-button ui-corner-all ui-widget" type="button" onclick="$('#downloadDialog').dialog('open');" title="Download" style="padding:5px;height:30px;width:30px;background-image:url(download.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
 				</span>
 				<span class="radioButtonGroup">
 					<input id="draw" class="radioButton" type="radio" name="modeGroup" value="drawMode" onclick="clickModeGroup(this.value);" checked><label for="draw">Draw</label>
@@ -62,9 +62,9 @@
 						<input id="rotate" class="radioButton" type="radio" name="viewMode" value="Rotate" onclick="AlDrawModule.setInputStrategy(this.value);" checked><label for="rotate" title="Rotate" style="padding:5px;"><img src="rotate.svg" alt="Rotate" class="buttonIcon"></label>
 					</span>
 					<label for="angle">Angle:</label><input id="angle" type="number" value="0" style="height:25px;width:6em;" onchange="AlDrawModule.setAngle(this.value);">
-					<input id="default" class="button" type="button" value="Default" onclick="AlDrawModule.setDefaultView();">
-					<input id="zoomIn" class="button" type="button" value="Zoom In" onclick="AlDrawModule.zoomIn();">
-					<input id="zoomOut" class="button" type="button" value="Zoom Out" onclick="AlDrawModule.zoomOut();">
+					<!--input id="default" class="button" type="button" value="Default" onclick="AlDrawModule.setDefaultView();"-->
+					<input id="zoomIn" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.zoomIn()" title="Zoom In" style="padding:5px;height:30px;width:30px;background-image:url(zoomin.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
+					<input id="zoomOut" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.zoomOut()" title="Zoom Out" style="padding:5px;height:30px;width:30px;background-image:url(zoomout.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
 					<span class="radioButtonGroup">
 						<input id="showLines" class="radioButton" type="checkbox" onclick="AlDrawModule.setShowLines(this.checked);" checked><label for="showLines">Show Lines</label>
 						<input id="showPoints" class="radioButton" type="checkbox" onclick="AlDrawModule.setShowPoints(this.checked);" checked><label for="showPoints">Show Points</label>

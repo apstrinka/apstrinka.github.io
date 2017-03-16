@@ -27,6 +27,10 @@ var AlDrawModule = (function(){
 			}
 			return false;
 		},
+		round: function(num, order){
+			var factor = Math.pow(10, -order);
+			return Math.round(num*factor) / factor;
+		},
 		midPoint: function(p1, p2){
 			var x = (p1.x + p2.x)/2;
 			var y = (p1.y + p2.y)/2;
@@ -1300,6 +1304,7 @@ var AlDrawModule = (function(){
 					context.arc(point.x, point.y, radius, start, end, false);
 				}
 			} else {
+				console.log("Enclosure.draw invalid enclosure");
 				console.log(this.path);
 				console.log(pathable);
 			}
@@ -2703,7 +2708,7 @@ var AlDrawModule = (function(){
 		for (i = 0; i < length; i++){
 			shadows[i].draw(ctx, converter, new Color(190, 190, 190));
 		}
-		$('#angle').val(Utils.toDegrees(converter.angle));
+		$('#angle').val(Utils.round(Utils.toDegrees(converter.angle), -6));
 	}
 	
 	function getInputStrategy(){
@@ -2775,7 +2780,6 @@ var AlDrawModule = (function(){
 	
 	function setAngle(value){
 		var angle = Number(value);
-		console.log(angle);
 		if (angle !== NaN){
 			converter.angle = Utils.toRadians(angle);
 		}
@@ -2844,7 +2848,6 @@ var AlDrawModule = (function(){
 	
 	function save(name){
 		var save = {state: currentState, converter: converter.copy()};
-		console.log(JSON.stringify(converter));
 		if (saves[name] === undefined || confirm('Are you sure you want to overwrite ' + name + '?')){
 			saves[name] = save;
 			localStorage.setItem("saves", JSON.stringify(saves));
@@ -2858,9 +2861,7 @@ var AlDrawModule = (function(){
 		if (save === undefined){
 			alert('There is no save named ' + name + '.');
 		} else {
-			console.log(save.converter);
 			converter.setValues(save.converter);
-			console.log(converter);
 			var newState = AlDrawState.fromObject(save.state);
 			addState(newState);
 			updateView();
@@ -3021,7 +3022,7 @@ var AlDrawModule = (function(){
 		generateSaveDialog: generateSaveDialog,
 		save: save,
 		load: load,
-		deleteSave, deleteSave,
+		deleteSave: deleteSave,
 		saveAsPNG: saveAsPNG,
 		saveAsSVG: saveAsSVG
 	};
