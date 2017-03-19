@@ -50,11 +50,13 @@
 					<input id="circumscribe" class="radioButton" type="radio" name="shortcutMode" value="Circumscribe Triangle" onclick="AlDrawModule.setInputStrategy(this.value);"><label for="circumscribe" title="Circumscribe Triangle" style="padding:5px;"><img src="circumscribe.svg" alt="Circumscribe" class="buttonIcon"></label>
 					<input id="compass" class="radioButton" type="radio" name="shortcutMode" value="Compass" onclick="AlDrawModule.setInputStrategy(this.value);"><label for="compass" title="Non-Collapsing Compass" style="padding:5px;"><img src="compass.svg" alt="Compass" class="buttonIcon"></label>
 				</span>
-				<span id="colorButtons" class="radioButtonGroup modeGroup colorMode" style="display: none;">
-					<input id="fillColor" class="radioButton" type="radio" name="colorMode"  value="Fill Color" onclick="AlDrawModule.setInputStrategy(this.value);" checked><label for="fillColor" title="Fill Color" style="padding:5px;"><img src="paintbucket.svg" alt="Paint Bucket" class="buttonIcon"></label>
-					<input id="eraseColor" class="radioButton" type="radio" name="colorMode" value="Erase Color" onclick="AlDrawModule.setInputStrategy(this.value);"><label for="eraseColor" title="Erase Color" style="padding:5px;"><img src="eraser.svg" alt="Eraser" class="buttonIcon"></label>
-					<input id="pickColor" class="radioButton" type="radio" name="colorMode" value="Pick Color" onclick="AlDrawModule.setInputStrategy(this.value);"><label for="pickColor" title="Pick Color" style="padding:5px;"><img src="eyedropper.svg" alt="Eye Dropper" class="buttonIcon"></label>
-					<input id="chooseColor" type="color" value="#ff0000" onchange="AlDrawModule.setColor(this.value)" style="height:26px; width:26px; padding:2px; display:inline;">
+				<span id="colorButtons" class="modeGroup colorMode" style="display: none;">
+					<span class="radioButtonGroup">
+						<input id="fillColor" class="radioButton" type="radio" name="colorMode"  value="Fill Color" onclick="AlDrawModule.setInputStrategy(this.value);" checked><label for="fillColor" title="Fill Color" style="padding:5px;"><img src="paintbucket.svg" alt="Paint Bucket" class="buttonIcon"></label>
+						<input id="eraseColor" class="radioButton" type="radio" name="colorMode" value="Erase Color" onclick="AlDrawModule.setInputStrategy(this.value);"><label for="eraseColor" title="Erase Color" style="padding:5px;"><img src="eraser.svg" alt="Eraser" class="buttonIcon"></label>
+						<input id="pickColor" class="radioButton" type="radio" name="colorMode" value="Pick Color" onclick="AlDrawModule.setInputStrategy(this.value);"><label for="pickColor" title="Pick Color" style="padding:5px;"><img src="eyedropper.svg" alt="Eye Dropper" class="buttonIcon"></label>
+					</span>
+					<input id="chooseColor" type="color" value="#ff0000" onchange="AlDrawModule.setColor(this.value)" style="height:26px; width:26px; padding:2px;">
 				</span>
 				<span id="viewButtons" class="modeGroup viewMode" style="display: none;">
 					<span class="radioButtonGroup">
