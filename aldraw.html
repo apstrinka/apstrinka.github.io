@@ -82,7 +82,7 @@
 					<input id="saveFilename" type="text">
 				</div>
 				<div style="text-align:center;margin-top:5px;margin-bottom:5px;">
-					<input id="save" class="button" type="button" value="Save" onclick="AlDrawModule.save($('#saveFilename').val());">
+					<input id="save" class="button" type="button" value="Save" onclick="AlDrawModule.save($('#saveFilename').val(), true);">
 					<input id="load" class="button" type="button" value="Load" onclick="AlDrawModule.load($('#saveFilename').val());">
 					<input id="delete" class="button" type="button" value="Delete" onclick="AlDrawModule.deleteSave($('#saveFilename').val());">
 				</div>
@@ -101,7 +101,7 @@
 		</div>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 		<script src="lib/jquery.mousewheel.min.js"></script>
-		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+		<script src="lib\jquery-ui-1.12.1.custom\jquery-ui.min.js"></script>
 		<script src="aldraw.js"></script>
 	</body>
 </html>

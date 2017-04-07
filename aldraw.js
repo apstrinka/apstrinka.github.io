@@ -2693,6 +2693,7 @@ var AlDrawModule = (function(){
 		currentState.next = newState;
 		newState.previous = currentState;
 		currentState = newState;
+		save('autosave', false);
 	}
 
 	function updateView(){
@@ -2846,9 +2847,9 @@ var AlDrawModule = (function(){
 		saveDialog.parentNode.replaceChild(clone, saveDialog);
 	}
 	
-	function save(name){
+	function save(name, conf){
 		var save = {state: currentState, converter: converter.copy()};
-		if (saves[name] === undefined || confirm('Are you sure you want to overwrite ' + name + '?')){
+		if (!conf || (saves[name] === undefined || confirm('Are you sure you want to overwrite ' + name + '?'))){
 			saves[name] = save;
 			localStorage.setItem("saves", JSON.stringify(saves));
 			$('#saveDialog').dialog('close');
