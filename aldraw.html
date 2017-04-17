@@ -72,6 +72,9 @@
 						<input id="showPoints" class="radioButton" type="checkbox" onclick="AlDrawModule.setShowPoints(this.checked);" checked><label for="showPoints">Show Points</label>
 					</span>
 				</span>
+				<span style="float:right;">
+					<input id="help" class="ui-button ui-corner-all ui-widget" type="button" onclick="$('#helpDialog').dialog('open');" title="Help" style="padding:5px;height:30px;width:30px;background-image:url(question.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
+				</span>
 			</div>
 			<div id="viewport" class="viewport">
 				<canvas id="myCanvas"></canvas>
@@ -97,6 +100,24 @@
 					<input id="saveAsPNG" class="button" type="button" value="PNG" onclick="AlDrawModule.saveAsPNG($('#downloadFilename').val());">
 					<input id="saveAsSVG" class="button" type="button" value="SVG" onclick="AlDrawModule.saveAsSVG($('#downloadFilename').val());">
 				</div>
+			</div>
+			<div id="helpDialog" title="Help">
+				<div>
+					<div id="helpPage1" class="helpPage visible">
+						AlDraw is a tool for making pictures using <a href="https://en.wikipedia.org/wiki/Compass-and-straightedge_construction" target="_blank">geometric construction</a>. Geometric construction only allows you to draw straight lines and circles.
+					</div>
+					<div id="helpPage2" class="helpPage invisible">
+						Some more words...
+					</div>
+					<div id="helpPage3" class="helpPage invisible">
+						Words, words, words...
+					</div>
+				</div>
+				<br />
+				<span>
+					<input id="prevHelpPage" class="button" type="button" value="Prev" onclick="prevHelpPage();" disabled>				
+					<input id="nextHelpPage" class="button" type="button" value="Next" style="float:right;" onclick="nextHelpPage();">
+				</span>
 			</div>
 		</div>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>

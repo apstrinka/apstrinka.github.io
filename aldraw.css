@@ -36,3 +36,7 @@ html, body{
 #myCanvas{
 	display: block;
 }
+
+.invisible {
+	display: none;
+}

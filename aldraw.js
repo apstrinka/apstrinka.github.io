@@ -3040,6 +3040,32 @@ function markChecked(id){
 	$('.relatedButtons').checkboxradio("refresh");
 }
 
+function nextHelpPage(){
+	var elem = $('.helpPage.visible');
+	var next = elem.next();
+	elem.removeClass('visible');
+	elem.addClass('invisible');
+	next.removeClass('invisible');
+	next.addClass('visible');
+	$('#prevHelpPage').button({disabled: false});
+	if (next.next().length === 0){
+		$('#nextHelpPage').button({disabled: true});
+	}
+}
+
+function prevHelpPage(){
+	var elem = $('.helpPage.visible');
+	var prev = elem.prev();
+	elem.removeClass('visible');
+	elem.addClass('invisible');
+	prev.removeClass('invisible');
+	prev.addClass('visible');
+	$('#nextHelpPage').button({disabled: false});
+	if (prev.prev().length === 0){
+		$('#prevHelpPage').button({disabled: true});
+	}
+}
+
 $(document).ready(function(){
 	$(document).tooltip();
 	$(".button").button();
@@ -3048,6 +3074,7 @@ $(document).ready(function(){
 	$(".radioButtonGroup").controlgroup();
 	$("#saveDialog").dialog({autoOpen: false, height: 400, width: 460});
 	$("#downloadDialog").dialog({autoOpen: false});
+	$("#helpDialog").dialog({autoOpen: false});
 	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();
