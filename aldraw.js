@@ -1437,7 +1437,7 @@ var AlDrawModule = (function(){
 			point = c.translate(0, circle.radius);
 			updateMinMax(point);
 		}
-		this.conversionRatio = Math.min(this.width / (maxX - minX), this.height / (maxY - minY));
+		this.conversionRatio = Math.min((this.width-2) / (maxX - minX), (this.height-2) / (maxY - minY));
 		point = new Point((maxX + minX)/2, (maxY + minY)/2);
 		point = point.rotateAroundOrigin(-this.angle);
 		this.cX = point.x;
@@ -3074,7 +3074,7 @@ $(document).ready(function(){
 	$(".radioButtonGroup").controlgroup();
 	$("#saveDialog").dialog({autoOpen: false, height: 400, width: 460});
 	$("#downloadDialog").dialog({autoOpen: false});
-	$("#helpDialog").dialog({autoOpen: false});
+	$("#helpDialog").dialog({autoOpen: false, height:300, width:500});
 	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();
