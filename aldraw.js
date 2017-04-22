@@ -2698,6 +2698,8 @@ var AlDrawModule = (function(){
 
 	function updateView(){
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		ctx.fillStyle = '#fafafa';
+		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 		ctx.strokeStyle = 'black';
 		currentState.draw(ctx, converter, showLines, showPoints);
 		var length = selectedPoints.length;
