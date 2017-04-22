@@ -2737,7 +2737,7 @@ var AlDrawModule = (function(){
 		newState.start();
 		addState(newState);
 		selectedPoints = [];
-		updateView();
+		setDefaultView();
 	}
 	
 	function undo(){
@@ -2762,7 +2762,7 @@ var AlDrawModule = (function(){
 	}
 	
 	function setDefaultView(){
-		converter.conversionRatio = Math.min(converter.width, converter.height)/2;
+		converter.conversionRatio = Math.min(converter.width, converter.height)/2-1;
 		converter.cX = 0;
 		converter.cY = 0;
 		converter.angle = 0;
@@ -3041,6 +3041,7 @@ function markChecked(id){
 }
 
 function nextHelpPage(){
+	document.getElementById('helpContent').scrollTop = 0;
 	var elem = $('.helpPage.visible');
 	var next = elem.next();
 	elem.removeClass('visible');
@@ -3054,6 +3055,7 @@ function nextHelpPage(){
 }
 
 function prevHelpPage(){
+	document.getElementById('helpContent').scrollTop = 0;
 	var elem = $('.helpPage.visible');
 	var prev = elem.prev();
 	elem.removeClass('visible');
@@ -3078,10 +3080,9 @@ $(document).ready(function(){
 	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();
-	AlDrawModule.converter.conversionRatio = Math.min(AlDrawModule.converter.width, AlDrawModule.converter.height)/2;
 	AlDrawModule.setContext(canvas.getContext("2d"));
 	AlDrawModule.initContext();
-	AlDrawModule.updateView();
+	AlDrawModule.setDefaultView();
 	
 	$(window).resize(function(){
 		AlDrawModule.resizeCanvas();
