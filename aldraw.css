@@ -14,11 +14,13 @@ html, body{
 	color: #eee;
 	padding: 5px;
 	padding-left: 50px;
+}
+
+.minflex{
 	flex: 0 1 auto;
 }
 
 .controls{
-	flex: 0 1 auto;
 	background-color: lightgray;
 }
 

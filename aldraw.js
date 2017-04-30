@@ -3078,7 +3078,7 @@ $(document).ready(function(){
 	$(".radioButtonGroup").controlgroup();
 	$("#saveDialog").dialog({autoOpen: false, height: 400, width: 460});
 	$("#downloadDialog").dialog({autoOpen: false});
-	$("#helpDialog").dialog({autoOpen: false, height:300, width:500});
+	$("#helpDialog").dialog({autoOpen: false, height:400, width:500});
 	
 	var canvas = document.getElementById("myCanvas");
 	AlDrawModule.resizeCanvas();
