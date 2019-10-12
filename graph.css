@@ -1,0 +1,44 @@
+html, body{
+	margin: 0px;
+	height: 100%;
+}
+
+.box{
+	display: flex;
+	flex-flow: column;
+  height: 100%;
+}
+
+.header {
+	background-color: #111;
+	color: #eee;
+	padding: 5px;
+	padding-left: 50px;
+}
+
+.minflex{
+	flex: 0 1 auto;
+}
+
+.controls{
+	background-color: lightgray;
+}
+
+.viewport {
+	width: 100%;
+	flex: 1 1 auto;
+}
+
+.buttonIcon {
+	height: 21px;
+	width: 21px;
+	display: block;
+}
+
+#myCanvas{
+	display: block;
+}
+
+.invisible {
+	display: none;
+}

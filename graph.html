@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+		<link href="graph.css" rel="stylesheet">
+		<title>Graph</title>
+	</head>
+	<body>
+		<div class="box">
+			<div class="header minflex"><h1>Graph Thing</h1></div>
+			<div class="controls minflex">
+				<span>
+					<input id="clear" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.clear()" title="Clear" style="padding:5px;height:30px;width:30px;background-image:url(clear.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
+					<input id="undo" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.undo()" title="Undo" style="padding:5px;height:30px;width:30px;background-image:url(undo.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
+					<input id="undo" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.redo()" title="Redo" style="padding:5px;height:30px;width:30px;background-image:url(redo.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
+					<input id="zoom" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.autoZoom()" title="Zoom to Fit" style="padding:5px;height:30px;width:30px;background-image:url(magnifyingglass.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
+				</span>
+			</div>
+			<noscript><h1 style="text-align:center">This page requires javascript to work correctly</h1></noscript>
+			<div style="flex-grow:1; display:flex; flex-direction:row">
+				<div id="viewport" style="flex:0 1 auto; width:50%">
+					<canvas id="myCanvas"></canvas>
+				</div>
+				<div style="flex-grow:1">
+					<h3>Graph Info:</h3>
+					<div id="info"></div>
+				</div>
+			</div>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script src="lib/jquery.mousewheel.min.js"></script>
+		<script src="lib\jquery-ui-1.12.1.custom\jquery-ui.min.js"></script>
+		<script src="graph.js"></script>
+	</body>
+</html>
