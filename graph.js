@@ -2,16 +2,20 @@
 
 var nodeRadius = 10;
 
+function isBetween(x, bound1, bound2){
+	return ((x < bound1 && x > bound2) || (x > bound1 && x < bound2));
+}
+
 function Node(id){
 	this.id = id;
-	this.edges = [];
+	this.links = [];
 }
 
 function Graph(){
 	this.nextId = 0;
 	this.nodes = [];
 	this.numNodes = 0;
-	this.numEdges = 0;
+	this.numLinks = 0;
 	this.distanceMatrix = [];
 }
 
@@ -26,10 +30,10 @@ Graph.prototype.addNode = function(){
 	return node;
 }
 
-Graph.prototype.addEdge = function(fromNode, toNode){
-	this.numEdges = this.numEdges + 1;
-	fromNode.edges.push({toNode: toNode, weight: 1});
-	toNode.edges.push({toNode: fromNode, weight: 1});
+Graph.prototype.addLink = function(fromNode, toNode){
+	this.numLinks = this.numLinks + 1;
+	fromNode.links.push({toNode: toNode, weight: 1});
+	toNode.links.push({toNode: fromNode, weight: 1});
 	this.calculateDistanceGraph();
 }
 
@@ -43,7 +47,6 @@ Graph.prototype.calculateDistanceGraph = function(){
 }
 
 Graph.prototype.calculateDistancesFrom = function(startNode){
-	console.log("start");
 	var getNextNodeToExplore = function(nodesToExplore, nodeDistances){
 		var minNode = nodesToExplore[0];
 		var minDist = nodeDistances[minNode.id];
@@ -67,12 +70,11 @@ Graph.prototype.calculateDistancesFrom = function(startNode){
 	nodeDistances[startNode.id] = 0
 	var nodesToExplore = [startNode]
 	while (nodesToExplore.length !== 0){
-		console.log(nodeDistances.length);
 		var node = getNextNodeToExplore(nodesToExplore, nodeDistances);
 		var nodeDist = nodeDistances[node.id]
 		
-		for (var i = 0; i < node.edges.length; i++){
-			var pair = node.edges[i]
+		for (var i = 0; i < node.links.length; i++){
+			var pair = node.links[i]
 			var nextNode = pair.toNode;
 			var nextDist = nodeDist + pair.weight;
 			if (nodeDistances[nextNode.id] === undefined || nodeDistances[nextNode.id] > nextDist){
@@ -85,25 +87,61 @@ Graph.prototype.calculateDistancesFrom = function(startNode){
 	return nodeDistances;
 }
 
-function ViewNode(node, x, y){
+function ViewNode(node, x, y, selected){
 	this.node = node;
 	this.x = x;
 	this.y = y;
+	this.selected = selected;
+}
+
+ViewNode.prototype.distanceTo = function(x0, y0){
+	return Math.hypot(this.x - x0, this.y - y0);
 }
 
 ViewNode.prototype.draw = function(context){
+	if (this.selected)
+		context.strokeStyle = "#FF0000";
+	else
+		context.strokeStyle = "#000000";
+	
 	context.beginPath();
 	context.arc(this.x, this.y, nodeRadius, 0, 2*Math.PI);
 	context.stroke();
 	context.fillText(this.node.id, this.x-5, this.y+3);
 }
 
-function ViewEdge(fromNode, toNode){
+function ViewLink(fromNode, toNode, selected){
 	this.fromNode = fromNode;
 	this.toNode = toNode;
+	this.selected = selected;
 }
 
-ViewEdge.prototype.draw = function(context){
+ViewLink.prototype.distanceTo = function(x0, y0){
+	var x1 = this.fromNode.x;
+	var y1 = this.fromNode.y;
+	var x2 = this.toNode.x;
+	var y2 = this.toNode.y;
+	
+	var a = y2 - y1;
+	var b = x1 - x2;
+	var c = x2*y1 - y2*x1;
+	var dist = Math.abs(a*x0 + b*y0 + c)/Math.hypot(a, b);
+	
+	var x = (b*(b*x0 - a*y0) - a*c)/(a*a + b*b);
+	var y = (a*(a*y0 - b*x0) - b*c)/(a*a + b*b);
+	
+	if (isBetween(x, x1, x2) && isBetween(y, y1, y2))
+		return dist;
+	
+	return Math.min(this.fromNode.distanceTo(x0, y0), this.toNode.distanceTo(x0, y0));
+}
+
+ViewLink.prototype.draw = function(context){
+	if (this.selected)
+		context.strokeStyle = "#FF0000";
+	else
+		context.strokeStyle = "#000000";
+	
 	var fromX = this.fromNode.x;
 	var fromY = this.fromNode.y;
 	var toX = this.toNode.x;
@@ -127,18 +165,18 @@ ViewEdge.prototype.draw = function(context){
 function ViewGraph(){
 	this.graph = new Graph();
 	this.viewNodes = [];
-	this.viewEdges = [];
+	this.viewLinks = [];
 }
 
 ViewGraph.prototype.addNode = function(x, y){
 	var node = this.graph.addNode();
-	var viewNode = new ViewNode(node, x, y);
+	var viewNode = new ViewNode(node, x, y, true);
 	this.viewNodes.push(viewNode);
 }
 
-ViewGraph.prototype.addEdge = function(fromViewNode, toViewNode){
-	this.graph.addEdge(fromViewNode.node, toViewNode.node);
-	this.viewEdges.push(new ViewEdge(fromViewNode, toViewNode));
+ViewGraph.prototype.addLink = function(fromViewNode, toViewNode){
+	this.graph.addLink(fromViewNode.node, toViewNode.node);
+	this.viewLinks.push(new ViewLink(fromViewNode, toViewNode, true));
 }
 
 ViewGraph.prototype.nodeAt = function(x, y){
@@ -147,7 +185,7 @@ ViewGraph.prototype.nodeAt = function(x, y){
 	
 	for (var i = 0; i < this.viewNodes.length; i++){
 		var node = this.viewNodes[i];
-		var dist = Math.hypot(node.x - x, node.y - y);
+		var dist = node.distanceTo(x, y);
 		if (dist < nodeRadius){
 			if (dist < minDist || minDist < 0){
 				minDist = dist;
@@ -159,15 +197,45 @@ ViewGraph.prototype.nodeAt = function(x, y){
 	return minNode;
 }
 
+ViewGraph.prototype.linkAt = function(x, y){
+	var minDist = -1;
+	var minLink = null;
+	
+	for (var i = 0; i < this.viewLinks.length; i++){
+		var link = this.viewLinks[i];
+		var dist = link.distanceTo(x, y);
+		if (dist < nodeRadius){
+			if (dist < minDist || minDist < 0){
+				minDist = dist;
+				minLink = link;
+			}
+		}
+	}
+	
+	return minLink;
+}
+
+ViewGraph.prototype.unselectAll = function(){
+	var i;
+	
+	for (var i = 0; i < this.viewLinks.length; i++){
+		this.viewLinks[i].selected = false;
+	}
+	
+	for (var i = 0; i < this.viewNodes.length; i++){
+		this.viewNodes[i].selected = false;
+	}
+}
+
 ViewGraph.prototype.draw = function(context){
 	var i;
 	
-	for (i = 0; i < this.viewNodes.length; i++){
-		this.viewNodes[i].draw(context);
+	for (var i = 0; i < this.viewLinks.length; i++){
+		this.viewLinks[i].draw(context);
 	}
 	
-	for (var i = 0; i < this.viewEdges.length; i++){
-		this.viewEdges[i].draw(context);
+	for (i = 0; i < this.viewNodes.length; i++){
+		this.viewNodes[i].draw(context);
 	}
 }
 
@@ -175,7 +243,7 @@ ViewGraph.prototype.summarize = function(div){
 	div.empty();
 	var numNodes = this.graph.numNodes;
 	div.append("<p>Number of nodes: " + numNodes + "</p>");
-	div.append("<p>Number of edges: " + this.graph.numEdges + "</p>");
+	div.append("<p>Number of links: " + this.graph.numLinks + "</p>");
 	div.append("<p>Distance matrix</p>");
 	var table = document.createElement("table");
 	var headerRow = document.createElement("tr");
@@ -203,6 +271,61 @@ ViewGraph.prototype.summarize = function(div){
 		table.appendChild(row);
 	}
 	div.append(table)
+}
+
+function addNode(viewGraph, x, y, canvas, context, div){
+	clearCanvas(canvas, context);
+	viewGraph.unselectAll();
+	viewGraph.addNode(x, y);
+	viewGraph.draw(context);
+	viewGraph.summarize(div);
+}
+
+function addLink(viewGraph, startNode, endNode, canvas, context, div){
+	clearCanvas(canvas, context);
+	viewGraph.unselectAll();
+	viewGraph.addLink(startNode, endNode);
+	viewGraph.draw(context);
+	viewGraph.summarize(div);
+}
+
+function selectItem(viewGraph, item, multiselect, canvas, context, div){
+	clearCanvas(canvas, context);
+	if (!multiselect)
+		viewGraph.unselectAll();
+	item.selected = !item.selected;
+	viewGraph.draw(context);
+	viewGraph.summarize(div);
+}
+
+function moveNode(viewGraph, startNode, x, y, canvas, context){
+	clearCanvas(canvas, context);
+	startNode.x = x;
+	startNode.y = y;
+	viewGraph.draw(context);
+}
+
+function drawTempLink(viewGraph, startNode, x, y, canvas, context){
+	clearCanvas(canvas, context);
+	
+	context.strokeStyle = "#888888";
+	
+	var fromX = startNode.x;
+	var fromY = startNode.y;
+	var xDiff = x - fromX;
+	var yDiff = y - fromY;
+	var dist = Math.hypot(xDiff, yDiff);
+	var xOffset = xDiff*nodeRadius/dist;
+	var yOffset = yDiff*nodeRadius/dist;
+	fromX = fromX + xOffset;
+	fromY = fromY + yOffset;
+	
+	context.beginPath();
+	context.moveTo(fromX, fromY);
+	context.lineTo(x, y);
+	context.stroke();
+	
+	viewGraph.draw(context);
 }
 
 function clearCanvas(canvas, context){
@@ -256,26 +379,38 @@ $(document).ready(function(){
 		if (moved && startNode !== null) {
 			var endNode = viewGraph.nodeAt(ev.offsetX, ev.offsetY);
 			if (endNode !== null && endNode !== startNode){
+				addLink(viewGraph, startNode, endNode, canvas, context, $("#info"));
+			} else {
 				clearCanvas(canvas, context);
-				viewGraph.addEdge(startNode, endNode);
 				viewGraph.draw(context);
-				viewGraph.summarize($("#info"));
 			}
 		}
+		startNode = null;
 	});
 	
 	$("#myCanvas").mousemove(function(ev){
 		moved = true;
+		if (startNode !== null){
+			if (startNode.selected)
+				moveNode(viewGraph, startNode, ev.offsetX, ev.offsetY, canvas, context);
+			else
+				drawTempLink(viewGraph, startNode, ev.offsetX, ev.offsetY, canvas, context);
+			}
 	});
 	
 	$("#myCanvas").click(function(ev){
 		if (!moved) {
-			var x = ev.offsetX;
-			var y = ev.offsetY;
-			clearCanvas(canvas, context);
-			viewGraph.addNode(x, y);
-			viewGraph.draw(context);
-			viewGraph.summarize($("#info"));
+			var node = viewGraph.nodeAt(ev.offsetX, ev.offsetY);
+			if (node !== null){
+				selectItem(viewGraph, node, ev.ctrlKey, canvas, context, $("#info"));
+			} else {
+				var link = viewGraph.linkAt(ev.offsetX, ev.offsetY);
+				if (link !== null){
+					selectItem(viewGraph, link, ev.ctrlKey, canvas, context, $("#info"));
+				} else {
+					addNode(viewGraph, ev.offsetX, ev.offsetY, canvas, context, $("#info"));
+				}
+			}
 		}
 	});
 });
