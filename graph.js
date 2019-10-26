@@ -14,13 +14,18 @@ function Node(id){
 function Graph(){
 	this.nextId = 0;
 	this.nodes = [];
-	this.numNodes = 0;
-	this.numLinks = 0;
 	this.distanceMatrix = [];
 }
 
+Graph.prototype.numNodes = function(){
+	return this.nodes.length;
+}
+
+Graph.prototype.numLinks = function(){
+	return this.nodes.reduce((total, i) => total + i.links.length, 0)/2;
+}
+
 Graph.prototype.addNode = function(){
-	this.numNodes = this.numNodes + 1;
 	var newRow = [];
 	newRow[this.nextId] = 0;
 	this.distanceMatrix.push(newRow);
@@ -31,18 +36,37 @@ Graph.prototype.addNode = function(){
 }
 
 Graph.prototype.addLink = function(fromNode, toNode){
-	this.numLinks = this.numLinks + 1;
 	fromNode.links.push({toNode: toNode, weight: 1});
 	toNode.links.push({toNode: fromNode, weight: 1});
 	this.calculateDistanceGraph();
 }
 
+Graph.prototype.deleteNode = function(node){
+	this.nodes = this.nodes.filter(i => i !== node);
+	this.nodes.forEach(i => i.links = i.links.filter(j => j.toNode !== node));
+	console.log(this.nodes);
+	this.removeNodeFromDistanceMatrix(node.id);
+	this.calculateDistanceGraph();
+}
+
+Graph.prototype.deleteLink = function(fromNode, toNode){
+	fromNode.links = fromNode.links.filter(i => i.toNode !== toNode);
+	toNode.links = toNode.links.filter(i => i.toNode !== fromNode);
+	this.calculateDistanceGraph();
+}
+
+Graph.prototype.removeNodeFromDistanceMatrix = function(id){
+	for (var i; i = 0; i < this.distanceMatrix.length()){
+		this.distanceMatrix[i][id] = undefined;
+	}
+	this.distanceMatrix[id] = [];
+}
+
 Graph.prototype.calculateDistanceGraph = function(){
 	for(var i = 0; i < this.nodes.length; i++){
-		var row = this.calculateDistancesFrom(this.nodes[i]);
-		for (var j = 0; j < this.nodes.length; j++){
-			this.distanceMatrix[i][j] = row[j]
-		}
+		var node = this.nodes[i];
+		var row = this.calculateDistancesFrom(node);
+		this.distanceMatrix[node.id] = row;
 	}
 }
 
@@ -227,6 +251,17 @@ ViewGraph.prototype.unselectAll = function(){
 	}
 }
 
+ViewGraph.prototype.deleteSelectedItems = function(){
+	var selectedLinks = this.viewLinks.filter(i => i.selected);
+	var selectedNodes = this.viewNodes.filter(i => i.selected);
+	
+	selectedLinks.forEach(i => this.graph.deleteLink(i.fromNode.node, i.toNode.node));
+	selectedNodes.forEach(i => this.graph.deleteNode(i.node));
+	
+	this.viewLinks = this.viewLinks.filter(i => !i.selected && !i.fromNode.selected && !i.toNode.selected);
+	this.viewNodes = this.viewNodes.filter(i => !i.selected);
+}
+
 ViewGraph.prototype.draw = function(context){
 	var i;
 	
@@ -241,26 +276,28 @@ ViewGraph.prototype.draw = function(context){
 
 ViewGraph.prototype.summarize = function(div){
 	div.empty();
-	var numNodes = this.graph.numNodes;
+	var numNodes = this.graph.numNodes();
 	div.append("<p>Number of nodes: " + numNodes + "</p>");
-	div.append("<p>Number of links: " + this.graph.numLinks + "</p>");
+	div.append("<p>Number of links: " + this.graph.numLinks() + "</p>");
 	div.append("<p>Distance matrix</p>");
 	var table = document.createElement("table");
 	var headerRow = document.createElement("tr");
 	headerRow.appendChild(document.createElement("td"));
 	for (var i = 0; i < numNodes; i++){
 		var header = document.createElement("td");
-		header.innerHTML = i;
+		header.innerHTML = this.graph.nodes[i].id;
 		headerRow.appendChild(header);
 	}
 	table.appendChild(headerRow);
 	for (var i = 0; i < numNodes; i++){
 		var row = document.createElement("tr");
 		var col = document.createElement("td");
-		col.innerHTML = i;
+		col.innerHTML = this.graph.nodes[i].id;
 		row.appendChild(col);
 		for (var j = 0; j < numNodes; j++){
-			var dist = this.graph.distanceMatrix[i][j];
+			var iId = this.graph.nodes[i].id;
+			var jId = this.graph.nodes[j].id;
+			var dist = this.graph.distanceMatrix[iId][jId];
 			col = document.createElement("td");
 			if (dist === undefined)
 				col.innerHTML = "x";
@@ -294,6 +331,13 @@ function selectItem(viewGraph, item, multiselect, canvas, context, div){
 	if (!multiselect)
 		viewGraph.unselectAll();
 	item.selected = !item.selected;
+	viewGraph.draw(context);
+	viewGraph.summarize(div);
+}
+
+function deleteSelectedItems(viewGraph, canvas, context, div){
+	clearCanvas(canvas, context);
+	viewGraph.deleteSelectedItems();
 	viewGraph.draw(context);
 	viewGraph.summarize(div);
 }
@@ -411,6 +455,13 @@ $(document).ready(function(){
 					addNode(viewGraph, ev.offsetX, ev.offsetY, canvas, context, $("#info"));
 				}
 			}
+		}
+	});
+	
+	$(document).keydown(function(ev){
+		//console.log(ev.which);
+		if (ev.which === 46) { //Delete
+			deleteSelectedItems(viewGraph, canvas, context, $("#info"));
 		}
 	});
 });
