@@ -7,7 +7,7 @@
 		<title>Graph</title>
 	</head>
 	<body>
-		<div class="box">
+		<div id="topContainer" class="box">
 			<div class="header minflex"><h1>Graph Thing</h1></div>
 			<div class="controls minflex">
 				<span>
@@ -18,15 +18,15 @@
 				</span>
 			</div>
 			<noscript><h1 style="text-align:center">This page requires javascript to work correctly</h1></noscript>
-			<div style="flex-grow:1; display:flex; flex-direction:row">
-				<div id="viewport" style="flex:0 1 auto; width:50%">
+			<div style="flex-grow:1">
+				<div id="viewport" style="height:100%;width:100%">
 					<canvas id="myCanvas"></canvas>
 				</div>
-				<div style="flex-grow:1">
-					<h3>Graph Info:</h3>
-					<div id="info"></div>
-				</div>
 			</div>
+		</div>
+		<div id="infoDialog" title="Graph Info">
+			<h3>Graph Info:</h3>
+			<div id="info" style="overflow-x:auto"></div>
 		</div>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 		<script src="lib/jquery.mousewheel.min.js"></script>

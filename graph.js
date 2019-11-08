@@ -394,6 +394,8 @@ $(document).ready(function(){
 	$("#chooseColor").button();
 	$(".radioButton").checkboxradio({icon: false});
 	$(".radioButtonGroup").controlgroup();
+	var viewport = $("#viewport");
+	$("#infoDialog").dialog({autoOpen: true, height:400, width:500, position: {my: "right top", at: "right top", of: viewport}});
 	
 	resizeCanvas();
 	
