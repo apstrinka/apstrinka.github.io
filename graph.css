@@ -5,6 +5,7 @@ html, body{
 
 table{
 	border-collapse: collapse;
+	overflow-x: auto;
 }
 
 table, th, td {
@@ -13,6 +14,13 @@ table, th, td {
 
 tr:nth-child(even){
 	background-color: #dddddd;
+}
+
+td{
+	height: 30px;
+	width: 30px;
+	min-width: 30px;
+	text-align: center;
 }
 
 .box{
