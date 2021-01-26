@@ -3117,6 +3117,21 @@ $(document).ready(function(){
 		AlDrawModule.getInputStrategy().drag(ev.offsetX, ev.offsetY);
 	});
 	
+	$("myCanvas").on("touchstart", function(ev){
+		console.log("Touch Start");
+		consoel.log(ev);
+	});
+	
+	$("#myCanvas").on("touchmove", function(ev){
+		console.log("Touch Start");
+		consoel.log(ev);
+	});
+	
+	$("#myCanvas").on("touchend", function(ev){
+		console.log("Touch Start");
+		consoel.log(ev);
+	});
+	
 	$(document).keydown(function(ev){
 		//console.log(ev.which);
 		//console.log(ev.shiftKey);
