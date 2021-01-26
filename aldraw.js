@@ -3104,24 +3104,28 @@ $(document).ready(function(){
 	$("#myCanvas").mousedown(function(ev){
 		console.log("Mouse Down");
 		console.log(ev);
+		console.log("(" + ev.offsetX + ", " + ev.offsetY + ")");
 		AlDrawModule.getInputStrategy().press(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").mouseup(function(ev){
 		console.log("Mouse Up");
 		console.log(ev);
+		console.log("(" + ev.offsetX + ", " + ev.offsetY + ")");
 		AlDrawModule.getInputStrategy().release(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").click(function(ev){
 		console.log("Click");
 		console.log(ev);
+		console.log("(" + ev.offsetX + ", " + ev.offsetY + ")");
 		AlDrawModule.getInputStrategy().click(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").mousemove(function(ev){
 		console.log("Mouse Move");
 		console.log(ev);
+		console.log("(" + ev.offsetX + ", " + ev.offsetY + ")");
 		AlDrawModule.getInputStrategy().drag(ev.offsetX, ev.offsetY);
 	});
 	
@@ -3134,6 +3138,7 @@ $(document).ready(function(){
 			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
 			var x = ev.clientX - canvasBounds.left;
 			var y = ev.clientY - canvasBounds.top;
+			console.log("(" + x + ", " + y + ")");
 			AlDrawModule.getInputStrategy().press(x, y);
 		}
 	}, {passive: false});
@@ -3147,6 +3152,7 @@ $(document).ready(function(){
 			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
 			var x = ev.clientX - canvasBounds.left;
 			var y = ev.clientY - canvasBounds.top;
+			console.log("(" + x + ", " + y + ")");
 			AlDrawModule.getInputStrategy().drag(x, y);
 		}
 	}, {passive: false});
@@ -3160,6 +3166,7 @@ $(document).ready(function(){
 			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
 			var x = ev.clientX - canvasBounds.left;
 			var y = ev.clientY - canvasBounds.top;
+			console.log("(" + x + ", " + y + ")");
 			AlDrawModule.getInputStrategy().release(x, y);
 		}
 	}, {passive: false});
