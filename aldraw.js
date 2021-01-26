@@ -3102,35 +3102,67 @@ $(document).ready(function(){
 	});
 	
 	$("#myCanvas").mousedown(function(ev){
+		console.log("Mouse Down");
+		console.log(ev);
 		AlDrawModule.getInputStrategy().press(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").mouseup(function(ev){
+		console.log("Mouse Up");
+		console.log(ev);
 		AlDrawModule.getInputStrategy().release(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").click(function(ev){
+		console.log("Click");
+		console.log(ev);
 		AlDrawModule.getInputStrategy().click(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").mousemove(function(ev){
+		console.log("Mouse Move");
+		console.log(ev);
 		AlDrawModule.getInputStrategy().drag(ev.offsetX, ev.offsetY);
 	});
 	
-	$("myCanvas").on("touchstart", function(ev){
+	document.getElementById("myCanvas").addEventListener("touchstart", function(ev){
+		ev.preventDefault();
+		ev.stopImmediatePropagation();
 		console.log("Touch Start");
 		console.log(ev);
-	});
+		if (ev.touches.length === 1){
+			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
+			var x = ev.clientX - canvasBounds.left;
+			var y = ev.clientY - canvasBounds.top;
+			AlDrawModule.getInputStrategy().press(x, y);
+		}
+	}, {passive: false});
 	
-	$("#myCanvas").on("touchmove", function(ev){
-		console.log("Touch Start");
+	document.getElementById("myCanvas").addEventListener("touchmove", function(ev){
+		ev.preventDefault();
+		ev.stopImmediatePropagation();
+		console.log("Touch Move");
 		console.log(ev);
-	});
+		if (ev.touches.length === 1){
+			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
+			var x = ev.clientX - canvasBounds.left;
+			var y = ev.clientY - canvasBounds.top;
+			AlDrawModule.getInputStrategy().drag(x, y);
+		}
+	}, {passive: false});
 	
-	$("#myCanvas").on("touchend", function(ev){
-		console.log("Touch Start");
+	document.getElementById("myCanvas").addEventListener("touchend", function(ev){
+		ev.preventDefault();
+		ev.stopImmediatePropagation();
+		console.log("Touch End");
 		console.log(ev);
-	});
+		if (ev.touches.length === 1){
+			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
+			var x = ev.clientX - canvasBounds.left;
+			var y = ev.clientY - canvasBounds.top;
+			AlDrawModule.getInputStrategy().release(x, y);
+		}
+	}, {passive: false});
 	
 	$(document).keydown(function(ev){
 		//console.log(ev.which);
