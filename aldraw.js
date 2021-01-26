@@ -3134,10 +3134,11 @@ $(document).ready(function(){
 		ev.stopImmediatePropagation();
 		console.log("Touch Start");
 		console.log(ev);
+		console.log(ev.touches.length);
 		if (ev.touches.length === 1){
 			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
-			var x = ev.clientX - canvasBounds.left;
-			var y = ev.clientY - canvasBounds.top;
+			var x = ev.touches[0].clientX - canvasBounds.left;
+			var y = ev.touches[0].clientY - canvasBounds.top;
 			console.log("(" + x + ", " + y + ")");
 			AlDrawModule.getInputStrategy().press(x, y);
 		}
@@ -3150,8 +3151,8 @@ $(document).ready(function(){
 		console.log(ev);
 		if (ev.touches.length === 1){
 			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
-			var x = ev.clientX - canvasBounds.left;
-			var y = ev.clientY - canvasBounds.top;
+			var x = ev.touches[0].clientX - canvasBounds.left;
+			var y = ev.touches[0].clientY - canvasBounds.top;
 			console.log("(" + x + ", " + y + ")");
 			AlDrawModule.getInputStrategy().drag(x, y);
 		}
@@ -3164,8 +3165,8 @@ $(document).ready(function(){
 		console.log(ev);
 		if (ev.touches.length === 1){
 			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
-			var x = ev.clientX - canvasBounds.left;
-			var y = ev.clientY - canvasBounds.top;
+			var x = ev.touches[0].clientX - canvasBounds.left;
+			var y = ev.touches[0].clientY - canvasBounds.top;
 			console.log("(" + x + ", " + y + ")");
 			AlDrawModule.getInputStrategy().release(x, y);
 		}
