@@ -3119,17 +3119,17 @@ $(document).ready(function(){
 	
 	$("myCanvas").on("touchstart", function(ev){
 		console.log("Touch Start");
-		consoel.log(ev);
+		console.log(ev);
 	});
 	
 	$("#myCanvas").on("touchmove", function(ev){
 		console.log("Touch Start");
-		consoel.log(ev);
+		console.log(ev);
 	});
 	
 	$("#myCanvas").on("touchend", function(ev){
 		console.log("Touch Start");
-		consoel.log(ev);
+		console.log(ev);
 	});
 	
 	$(document).keydown(function(ev){
