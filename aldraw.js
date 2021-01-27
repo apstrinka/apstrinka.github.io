@@ -3163,10 +3163,10 @@ $(document).ready(function(){
 		ev.stopImmediatePropagation();
 		console.log("Touch End");
 		console.log(ev);
-		if (ev.touches.length === 1){
+		if (ev.touches.length === 0){
 			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
-			var x = ev.touches[0].clientX - canvasBounds.left;
-			var y = ev.touches[0].clientY - canvasBounds.top;
+			var x = ev.changedTouches[0].clientX - canvasBounds.left;
+			var y = ev.changedTouches[0].clientY - canvasBounds.top;
 			console.log("(" + x + ", " + y + ")");
 			AlDrawModule.getInputStrategy().release(x, y);
 		}
