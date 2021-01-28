@@ -1384,11 +1384,11 @@ var AlDrawModule = (function(){
 	}
 
 	CoordinateConverter.prototype.zoom = function(firstAbstract, secondAbstract, firstScreen, secondScreen, lockAngle){
-		double abstractDist = firstAbstract.dist(secondAbstract);
-		double screenDist = firstScreen.dist(secondScreen);
+		var abstractDist = firstAbstract.dist(secondAbstract);
+		var screenDist = firstScreen.dist(secondScreen);
 		if (!lockAngle){
-			double abstractAngle = firstAbstract.angle(secondAbstract);
-			double screenAngle = firstScreen.angle(secondScreen);
+			var abstractAngle = firstAbstract.angle(secondAbstract);
+			var screenAngle = firstScreen.angle(secondScreen);
 			this.angle = Utils.angleDifference(screenAngle, abstractAngle);
 		}
 		this.conversionRatio = screenDist/abstractDist;
