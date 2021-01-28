@@ -2658,6 +2658,7 @@ var AlDrawModule = (function(){
 			} else {
 				converter.translate(this.abstractPoints[0], screenPoints[0]);
 			}
+			updateView();
 		},
 		touchEnd: function(touches){
 			this.abstractPoints = [];
