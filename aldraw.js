@@ -1376,7 +1376,7 @@ var AlDrawModule = (function(){
 	};
 
 	CoordinateConverter.prototype.translate = function(abstractPoint, screenPoint){
-		var diff = screenToAbstractCoord(firstScreen);
+		var diff = this.screenToAbstractCoord(firstScreen);
 		var dx = diff.x - firstAbstract.x;
 		var dy = diff.y - firstAbstract.y;
 		this.cX = this.cX - dx;
