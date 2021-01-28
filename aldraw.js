@@ -2644,7 +2644,7 @@ var AlDrawModule = (function(){
 			this.abstractPoints = [];
 			for (var i = 0; i < touches.length; i++){
 				var point = new Point(touches[i].x, touches[i].y);
-				abstractPoints.push(converter.screenToAbstractCoord(point));
+				this.abstractPoints.push(converter.screenToAbstractCoord(point));
 			}
 		},
 		touchMove: function(touches){
@@ -2653,17 +2653,17 @@ var AlDrawModule = (function(){
 				var point = new Point(touches[i].x, touches[i].y);
 				screenPoints.push(point);
 			}
-			if (abstractPoints.length > 1 && screenPoints.length > 1){
-				converter.zoom(abstractPoints[0], abstractPoints[1], screenPoints[0], screenPoints[1], false);
+			if (this.abstractPoints.length > 1 && screenPoints.length > 1){
+				converter.zoom(this.abstractPoints[0], this.abstractPoints[1], screenPoints[0], screenPoints[1], false);
 			} else {
-				converter.translate(abstractPoints[0], screenPoints[0]);
+				converter.translate(this.abstractPoints[0], screenPoints[0]);
 			}
 		},
 		touchEnd: function(touches){
 			this.abstractPoints = [];
 			for (var i = 0; i < touches.length; i++){
 				var point = new Point(touches[i].x, touches[i].y);
-				abstractPoints.push(converter.screenToAbstractCoord(point));
+				this.abstractPoints.push(converter.screenToAbstractCoord(point));
 			}
 			if (touches.length === 0){
 				this.multiTouchMode = false;
