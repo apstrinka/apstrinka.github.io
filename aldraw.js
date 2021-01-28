@@ -1374,7 +1374,27 @@ var AlDrawModule = (function(){
 		this.cY -= (this.zoomAmt - 1) * d * Math.sin(angle);
 		this.conversionRatio = this.conversionRatio / this.zoomAmt;
 	};
-	
+
+	CoordinateConverter.prototype.translate = function(abstractPoint, screenPoint){
+		var diff = screenToAbstractCoord(firstScreen);
+		var dx = diff.x - firstAbstract.x;
+		var dy = diff.y - firstAbstract.y;
+		this.cX = this.cX - dx;
+		this.cY = this.cY - dy;
+	}
+
+	CoordinateConverter.prototype.zoom = function(firstAbstract, secondAbstract, firstScreen, secondScreen, lockAngle){
+		double abstractDist = firstAbstract.dist(secondAbstract);
+		double screenDist = firstScreen.dist(secondScreen);
+		if (!lockAngle){
+			double abstractAngle = firstAbstract.angle(secondAbstract);
+			double screenAngle = firstScreen.angle(secondScreen);
+			this.angle = Utils.angleDifference(screenAngle, abstractAngle);
+		}
+		this.conversionRatio = screenDist/abstractDist;
+		this.translate(firstAbstract, firstScreen);
+	}
+
 	CoordinateConverter.prototype.autoZoom = function(state){
 		var minX, maxX, minY, maxY, i, length, point, q, c, arc, circle;
 		function updateMinMax(p){
@@ -2611,6 +2631,45 @@ var AlDrawModule = (function(){
 		}
 	};
 	inputStrategies.push(rotateInputStrategy);
+	
+	var multiTouchHandler = {
+		multiTouchMode: false,
+		abstractPoints: [],
+		touchStart: function(touches){
+			if (!this.multiTouchMode){
+				selectedPoints = [];
+				shadows = [];
+				this.multiTouchMode = true;
+			}
+			this.abstractPoints = [];
+			for (var i = 0; i < touches.length; i++){
+				var point = new Point(touches[i].x, touches[i].y);
+				abstractPoints.push(converter.screenToAbstractCoord(point));
+			}
+		},
+		touchMove: function(touches){
+			var screenPoints = [];
+			for (var i = 0; i < touches.length; i++){
+				var point = new Point(touches[i].x, touches[i].y);
+				screenPoints.push(point);
+			}
+			if (abstractPoints.length > 1 && screenPoints.length > 1){
+				converter.zoom(abstractPoints[0], abstractPoints[1], screenPoints[0], screenPoints[1], false);
+			} else {
+				converter.translate(abstractPoints[0], screenPoints[0]);
+			}
+		},
+		touchEnd: function(touches){
+			this.abstractPoints = [];
+			for (var i = 0; i < touches.length; i++){
+				var point = new Point(touches[i].x, touches[i].y);
+				abstractPoints.push(converter.screenToAbstractCoord(point));
+			}
+			if (touches.length === 0){
+				this.multiTouchMode = false;
+			}
+		}
+	}
 
 	function resizeCanvas(){
 		var canvas = document.getElementById("myCanvas");
@@ -3006,6 +3065,7 @@ var AlDrawModule = (function(){
 		getCurrentState: getCurrentState,
 		getInputStrategy: getInputStrategy,
 		setInputStrategy: setInputStrategy,
+		multiTouchHandler: multiTouchHandler,
 		setColor: setColor,
 		setContext: setContext,
 		getContext: getContext,
@@ -3102,73 +3162,66 @@ $(document).ready(function(){
 	});
 	
 	$("#myCanvas").mousedown(function(ev){
-		console.log("Mouse Down");
-		console.log(ev);
-		console.log("(" + ev.offsetX + ", " + ev.offsetY + ")");
 		AlDrawModule.getInputStrategy().press(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").mouseup(function(ev){
-		console.log("Mouse Up");
-		console.log(ev);
-		console.log("(" + ev.offsetX + ", " + ev.offsetY + ")");
 		AlDrawModule.getInputStrategy().release(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").click(function(ev){
-		console.log("Click");
-		console.log(ev);
-		console.log("(" + ev.offsetX + ", " + ev.offsetY + ")");
 		AlDrawModule.getInputStrategy().click(ev.offsetX, ev.offsetY);
 	});
 	
 	$("#myCanvas").mousemove(function(ev){
-		console.log("Mouse Move");
-		console.log(ev);
-		console.log("(" + ev.offsetX + ", " + ev.offsetY + ")");
 		AlDrawModule.getInputStrategy().drag(ev.offsetX, ev.offsetY);
 	});
 	
-	document.getElementById("myCanvas").addEventListener("touchstart", function(ev){
+	var extractTouchCoordinates = function(touch){
+		var canvasBounds = canvas.getBoundingClientRect();
+		var x = touch.clientX - canvasBounds.left;
+		var y = touch.clientY - canvasBounds.top;
+		return {x: x, y: y};
+	};
+	
+	var extractTouchesCoordinates = function(touches){
+		var coordinates = [];
+		for(var i = 0; i < touches.length; i++){
+			coordinates.push(extractTouchCoordinates(touches[i]));
+		}
+		return coordinates;
+	}
+	
+	canvas.addEventListener("touchstart", function(ev){
 		ev.preventDefault();
 		ev.stopImmediatePropagation();
-		console.log("Touch Start");
-		console.log(ev);
-		console.log(ev.touches.length);
 		if (ev.touches.length === 1){
-			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
-			var x = ev.touches[0].clientX - canvasBounds.left;
-			var y = ev.touches[0].clientY - canvasBounds.top;
-			console.log("(" + x + ", " + y + ")");
-			AlDrawModule.getInputStrategy().press(x, y);
+			var coordinates = extractTouchCoordinates(ev.touches[0]);
+			AlDrawModule.getInputStrategy().press(coordinates.x, coordinates.y);
+		} else {
+			AlDrawModule.multiTouchHandler.touchStart(extractTouchesCoordinates(ev.touches));
 		}
 	}, {passive: false});
 	
-	document.getElementById("myCanvas").addEventListener("touchmove", function(ev){
+	canvas.addEventListener("touchmove", function(ev){
 		ev.preventDefault();
 		ev.stopImmediatePropagation();
-		console.log("Touch Move");
-		console.log(ev);
-		if (ev.touches.length === 1){
-			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
-			var x = ev.touches[0].clientX - canvasBounds.left;
-			var y = ev.touches[0].clientY - canvasBounds.top;
-			console.log("(" + x + ", " + y + ")");
-			AlDrawModule.getInputStrategy().drag(x, y);
+		if (!AlDrawModule.multiTouchHandler.multiTouchMode){
+			var coordinates = extractTouchCoordinates(ev.touches[0]);
+			AlDrawModule.getInputStrategy().drag(coordinates.x, coordinates.y);
+		} else {
+			AlDrawModule.multiTouchHandler.touchMove(extractTouchesCoordinates(ev.touches));
 		}
 	}, {passive: false});
 	
-	document.getElementById("myCanvas").addEventListener("touchend", function(ev){
+	canvas.addEventListener("touchend", function(ev){
 		ev.preventDefault();
 		ev.stopImmediatePropagation();
-		console.log("Touch End");
-		console.log(ev);
-		if (ev.touches.length === 0){
-			var canvasBounds = document.getElementById("myCanvas").getBoundingClientRect();
-			var x = ev.changedTouches[0].clientX - canvasBounds.left;
-			var y = ev.changedTouches[0].clientY - canvasBounds.top;
-			console.log("(" + x + ", " + y + ")");
-			AlDrawModule.getInputStrategy().release(x, y);
+		if (!AlDrawModule.multiTouchHandler.multiTouchMode){
+			var coordinates = extractTouchCoordinates(ev.changedTouches[0]);
+			AlDrawModule.getInputStrategy().release(coordinates.x, coordinates.y);
+		} else {
+			AlDrawModule.multiTouchHandler.touchEnd(extractTouchesCoordinates(ev.touches));
 		}
 	}, {passive: false});
 	
