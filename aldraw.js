@@ -12,6 +12,12 @@ if (!String.prototype.endsWith) {
   };
 }
 
+var defaultSettings = {
+	showHeader: true,
+	dotRadius: 6,
+	lineWidth: 2
+};
+
 var AlDrawModule = (function(){
 	var Utils = {
 		defaultTolerance: 0.00001,
@@ -196,11 +202,11 @@ var AlDrawModule = (function(){
 		var style = context.fillStyle;
 		context.fillStyle = color.darker().toString();
 		context.beginPath();
-		context.arc(q.x, q.y, 6, 0, 2*Math.PI);
+		context.arc(q.x, q.y, settings.dotRadius, 0, 2*Math.PI);
 		context.fill();
 		context.fillStyle = color.toString();
 		context.beginPath();
-		context.arc(q.x, q.y, 3, 0, 2*Math.PI);
+		context.arc(q.x, q.y, settings.dotRadius/2, 0, 2*Math.PI);
 		context.fill();
 		context.fillStyle = style;
 	};
@@ -2697,6 +2703,15 @@ var AlDrawModule = (function(){
 		saves = JSON.parse(localStorage.getItem('saves'));
 	}
 	
+	var settings = defaultSettings;
+	if (localStorage.getItem('settings') !== null){
+		settings = JSON.parse(localStorage.getItem('settings'));
+	}
+	
+	function saveSettings(){
+		localStorage.setItem('settings', JSON.stringify(settings));
+	}
+	
 	function setColor(color){
 		fillColor = color;
 	}
@@ -2710,7 +2725,7 @@ var AlDrawModule = (function(){
 	}
 	
 	function initContext(){
-		ctx.lineWidth = 2;
+		ctx.lineWidth = settings.lineWidth;
 	};
 	
 	function stickPoint(p){
@@ -2947,7 +2962,7 @@ var AlDrawModule = (function(){
 		newCanvas.width = canvas.width;
 		newCanvas.height = canvas.height;
 		var newContext = newCanvas.getContext("2d");
-		newContext.lineWidth = 2;
+		newContext.lineWidth = settings.lineWidth;
 		currentState.draw(newContext, converter, showLines, false);
 		var url = newCanvas.toDataURL("image/png");
 		var link = document.createElement("a");
@@ -3067,6 +3082,8 @@ var AlDrawModule = (function(){
 		getInputStrategy: getInputStrategy,
 		setInputStrategy: setInputStrategy,
 		multiTouchHandler: multiTouchHandler,
+		settings: settings,
+		saveSettings: saveSettings,
 		setColor: setColor,
 		setContext: setContext,
 		getContext: getContext,
@@ -3101,6 +3118,78 @@ function clickModeGroup(val){
 function markChecked(id){
 	document.getElementById(id).checked = true;
 	$('.relatedButtons').checkboxradio("refresh");
+}
+
+var temporarySettings = null;
+
+function openSettingsDialog(){
+	$('#settingsDialog').dialog('open');
+	temporarySettings = {
+		showHeader: AlDrawModule.settings.showHeader,
+		lineWidth: AlDrawModule.settings.lineWidth,
+		dotRadius: AlDrawModule.settings.dotRadius
+	};
+	document.getElementById('showHeader').checked = temporarySettings.showHeader;
+	document.getElementById('lineWidth').value = temporarySettings.lineWidth;
+	document.getElementById('dotRadius').value = temporarySettings.dotRadius;
+}
+
+function changeSettingHeader(input){
+	if (input.checked){
+		$('#header').removeClass('invisible');
+	} else {
+		$('#header').addClass('invisible');
+	}
+	AlDrawModule.settings.showHeader = input.checked;
+	AlDrawModule.saveSettings();
+	AlDrawModule.resizeCanvas();
+	AlDrawModule.initContext();
+	AlDrawModule.updateView();
+}
+
+function changeSettingLineWidth(input){
+	AlDrawModule.settings.lineWidth = input.value;
+	AlDrawModule.initContext();
+	AlDrawModule.updateView();
+}
+
+function changeSettingDotRadius(input){
+	AlDrawModule.settings.dotRadius = input.value;
+	AlDrawModule.updateView();
+}
+
+function cancelSettings(){
+	AlDrawModule.settings.showHeader = temporarySettings.showHeader;
+	AlDrawModule.settings.lineWidth = temporarySettings.lineWidth;
+	AlDrawModule.settings.dotRadius = temporarySettings.dotRadius;
+	if (temporarySettings.showHeader){
+		$('#header').removeClass('invisible');
+	} else {
+		$('#header').addClass('invisible');
+	}
+	AlDrawModule.saveSettings();
+	AlDrawModule.resizeCanvas();
+	AlDrawModule.initContext();
+	AlDrawModule.updateView();
+	$('#settingsDialog').dialog('close');
+}
+
+function setDefaultSettings(){
+	AlDrawModule.settings.showHeader = defaultSettings.showHeader;
+	AlDrawModule.settings.lineWidth = defaultSettings.lineWidth;
+	AlDrawModule.settings.dotRadius = defaultSettings.dotRadius;
+	if (defaultSettings.showHeader){
+		$('#header').removeClass('invisible');
+	} else {
+		$('#header').addClass('invisible');
+	}
+	AlDrawModule.saveSettings();
+	AlDrawModule.resizeCanvas();
+	AlDrawModule.initContext();
+	AlDrawModule.updateView();
+	document.getElementById('showHeader').checked = defaultSettings.showHeader;
+	document.getElementById('lineWidth').value = defaultSettings.lineWidth;
+	document.getElementById('dotRadius').value = defaultSettings.dotRadius;
 }
 
 function nextHelpPage(){
@@ -3139,6 +3228,7 @@ $(document).ready(function(){
 	$(".radioButtonGroup").controlgroup();
 	$("#saveDialog").dialog({autoOpen: false, height: 400, width: 460});
 	$("#downloadDialog").dialog({autoOpen: false});
+	$("#settingsDialog").dialog({autoOpen: false});
 	$("#helpDialog").dialog({autoOpen: false, height:400, width:500});
 	
 	var canvas = document.getElementById("myCanvas");

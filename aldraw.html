@@ -8,7 +8,7 @@
 	</head>
 	<body>
 		<div class="box">
-			<div class="header minflex"><h1>AlDraw</h1></div>
+			<div id="header" class="header minflex"><h1>AlDraw</h1></div>
 			<div class="controls minflex">
 				<span>
 					<input id="clear" class="ui-button ui-corner-all ui-widget" type="button" onclick="AlDrawModule.clear()" title="Clear" style="padding:5px;height:30px;width:30px;background-image:url(clear.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
@@ -73,6 +73,7 @@
 					</span>
 				</span>
 				<span style="float:right;">
+					<input id="settings" class="ui-button ui-corner-all ui-widget" type="button" onclick="openSettingsDialog();" title="Settings" style="padding:5px;height:30px;width:30px;background-image:url(gear.svg);background-size:20px;background-repeat:no-repeat;background-position:center;">
 					<input id="help" class="ui-button ui-corner-all ui-widget" type="button" onclick="$('#helpDialog').dialog('open');" title="Help" style="padding:5px;height:30px;width:30px;background-image:url(question.png);background-size:20px;background-repeat:no-repeat;background-position:center;">
 				</span>
 			</div>
@@ -100,6 +101,24 @@
 				<div style="text-align:center;margin-top:5px;">
 					<input id="saveAsPNG" class="button" type="button" value="PNG" onclick="AlDrawModule.saveAsPNG($('#downloadFilename').val());">
 					<input id="saveAsSVG" class="button" type="button" value="SVG" onclick="AlDrawModule.saveAsSVG($('#downloadFilename').val());">
+				</div>
+			</div>
+			<div id="settingsDialog" title="Settings">
+				<div style="text-align:center;">
+					<label for="showHeader">Show Header:</label>
+					<input id="showHeader" type="checkbox" onclick="changeSettingHeader(this);">
+				</div>
+				<div style="text-align:center;">
+					<label for="lineWidth">Line Width:</label>
+					<input id="lineWidth" type="range" min="1" max="24" oninput="changeSettingLineWidth(this);">
+				</div>
+				<div style="text-align:center;">
+					<label for="dotRadius">Dot Radius:</label>
+					<input id="dotRadius" type="range" min="2" max="24" oninput="changeSettingDotRadius(this);">
+				</div>
+				<div style="text-align:center;margin-top:5px;">
+					<input id="settingsCancel" class="button" type="button" value="Cancel" onclick="cancelSettings()">
+					<input id="settingsDefault" class="button" type="button" value="Reset to Defaults" onclick="setDefaultSettings()">
 				</div>
 			</div>
 			<div id="helpDialog" title="Help" style="display:flex;flex-flow:column;">
