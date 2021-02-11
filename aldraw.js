@@ -12,12 +12,6 @@ if (!String.prototype.endsWith) {
   };
 }
 
-var defaultSettings = {
-	showHeader: true,
-	dotRadius: 6,
-	lineWidth: 2
-};
-
 var AlDrawModule = (function(){
 	var Utils = {
 		defaultTolerance: 0.00001,
@@ -2703,13 +2697,33 @@ var AlDrawModule = (function(){
 		saves = JSON.parse(localStorage.getItem('saves'));
 	}
 	
+	var defaultSettings = {showHeader: true, dotRadius: 6, lineWidth: 2};
 	var settings = defaultSettings;
 	if (localStorage.getItem('settings') !== null){
 		settings = JSON.parse(localStorage.getItem('settings'));
+		setHeaderVisibility(settings.showHeader);
 	}
 	
 	function saveSettings(){
 		localStorage.setItem('settings', JSON.stringify(settings));
+	}
+
+	function updateSettings(newSettings){
+		if (newSettings.showHeader !== undefined)
+			settings.showHeader = newSettings.showHeader;
+		if (newSettings.lineWidth !== undefined)
+			settings.lineWidth = newSettings.lineWidth;
+		if (newSettings.dotRadius !== undefined)
+			settings.dotRadius = newSettings.dotRadius;
+		setHeaderVisibility(settings.showHeader);
+		resizeCanvas();
+		initContext();
+		updateView();
+		saveSettings();
+	}
+
+	function setDefaultSettings(){
+		updateSettings(defaultSettings);
 	}
 	
 	function setColor(color){
@@ -3083,7 +3097,8 @@ var AlDrawModule = (function(){
 		setInputStrategy: setInputStrategy,
 		multiTouchHandler: multiTouchHandler,
 		settings: settings,
-		saveSettings: saveSettings,
+		updateSettings: updateSettings,
+		setDefaultSettings: setDefaultSettings,
 		setColor: setColor,
 		setContext: setContext,
 		getContext: getContext,
@@ -3120,6 +3135,14 @@ function markChecked(id){
 	$('.relatedButtons').checkboxradio("refresh");
 }
 
+function setHeaderVisibility(isVisible){
+	if (isVisible){
+		$('#header').removeClass('invisible');
+	} else {
+		$('#header').addClass('invisible');
+	}
+}
+
 var temporarySettings = null;
 
 function openSettingsDialog(){
@@ -3135,61 +3158,27 @@ function openSettingsDialog(){
 }
 
 function changeSettingHeader(input){
-	if (input.checked){
-		$('#header').removeClass('invisible');
-	} else {
-		$('#header').addClass('invisible');
-	}
-	AlDrawModule.settings.showHeader = input.checked;
-	AlDrawModule.saveSettings();
-	AlDrawModule.resizeCanvas();
-	AlDrawModule.initContext();
-	AlDrawModule.updateView();
+	AlDrawModule.updateSettings({showHeader: input.checked});
 }
 
 function changeSettingLineWidth(input){
-	AlDrawModule.settings.lineWidth = input.value;
-	AlDrawModule.initContext();
-	AlDrawModule.updateView();
+	AlDrawModule.updateSettings({lineWidth: input.value});
 }
 
 function changeSettingDotRadius(input){
-	AlDrawModule.settings.dotRadius = input.value;
-	AlDrawModule.updateView();
+	AlDrawModule.updateSettings({dotRadius: input.value});
 }
 
 function cancelSettings(){
-	AlDrawModule.settings.showHeader = temporarySettings.showHeader;
-	AlDrawModule.settings.lineWidth = temporarySettings.lineWidth;
-	AlDrawModule.settings.dotRadius = temporarySettings.dotRadius;
-	if (temporarySettings.showHeader){
-		$('#header').removeClass('invisible');
-	} else {
-		$('#header').addClass('invisible');
-	}
-	AlDrawModule.saveSettings();
-	AlDrawModule.resizeCanvas();
-	AlDrawModule.initContext();
-	AlDrawModule.updateView();
+	AlDrawModule.updateSettings(temporarySettings);
 	$('#settingsDialog').dialog('close');
 }
 
 function setDefaultSettings(){
-	AlDrawModule.settings.showHeader = defaultSettings.showHeader;
-	AlDrawModule.settings.lineWidth = defaultSettings.lineWidth;
-	AlDrawModule.settings.dotRadius = defaultSettings.dotRadius;
-	if (defaultSettings.showHeader){
-		$('#header').removeClass('invisible');
-	} else {
-		$('#header').addClass('invisible');
-	}
-	AlDrawModule.saveSettings();
-	AlDrawModule.resizeCanvas();
-	AlDrawModule.initContext();
-	AlDrawModule.updateView();
-	document.getElementById('showHeader').checked = defaultSettings.showHeader;
-	document.getElementById('lineWidth').value = defaultSettings.lineWidth;
-	document.getElementById('dotRadius').value = defaultSettings.dotRadius;
+	AlDrawModule.setDefaultSettings();
+	document.getElementById('showHeader').checked = AlDrawModule.settings.showHeader;
+	document.getElementById('lineWidth').value = AlDrawModule.settings.lineWidth;
+	document.getElementById('dotRadius').value = AlDrawModule.settings.dotRadius;
 }
 
 function nextHelpPage(){
