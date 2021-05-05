@@ -90,6 +90,10 @@
 					<input id="save" class="button" type="button" value="Save" onclick="AlDrawModule.save($('#saveFilename').val(), true);">
 					<input id="load" class="button" type="button" value="Load" onclick="AlDrawModule.load($('#saveFilename').val());">
 					<input id="delete" class="button" type="button" value="Delete" onclick="AlDrawModule.deleteSave($('#saveFilename').val());">
+					<input id="loadFromFile" class="button" type="button" value="Load From File" onclick="$('#fileInputDiv').removeClass('invisible');">
+				</div>
+				<div id="fileInputDiv" style="width:100%;margin-top:5px;margin-bottom:5px;" class="invisible">
+					<input id="fileInput" style="width:100%" type="file" onchange="AlDrawModule.loadFromFile(this.files[0]);"/>
 				</div>
 				<div id="saveDialogContents"></div>
 			</div>
@@ -99,6 +103,7 @@
 					<input id="downloadFilename" type="text">
 				</div>
 				<div style="text-align:center;margin-top:5px;">
+					<input id="saveAsAlDraw" class="button" type="button" value="AlDraw" onclick="AlDrawModule.saveAsAlDraw($('#downloadFilename').val());">
 					<input id="saveAsPNG" class="button" type="button" value="PNG" onclick="AlDrawModule.saveAsPNG($('#downloadFilename').val());">
 					<input id="saveAsSVG" class="button" type="button" value="SVG" onclick="AlDrawModule.saveAsSVG($('#downloadFilename').val());">
 				</div>
@@ -184,7 +189,7 @@
 					</div>
 				</div>
 				<span style="flex: 0 1 auto;margin-top:.5em;">
-					<input id="prevHelpPage" class="button" type="button" value="Prev" onclick="prevHelpPage();" disabled>				
+					<input id="prevHelpPage" class="button" type="button" value="Prev" onclick="prevHelpPage();" disabled>
 					<input id="nextHelpPage" class="button" type="button" value="Next" style="float:right;" onclick="nextHelpPage();">
 				</span>
 			</div>
@@ -193,13 +198,5 @@
 		<script src="lib/jquery.mousewheel.min.js"></script>
 		<script src="lib\jquery-ui-1.12.1.custom\jquery-ui.min.js"></script>
 		<script src="aldraw.js"></script>
-		<script>
-			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-			})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-			ga('create', 'UA-56761043-2', 'auto');
-			ga('send', 'pageview');
-		</script>
 	</body>
 </html>

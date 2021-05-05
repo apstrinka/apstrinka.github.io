@@ -2938,8 +2938,12 @@ var AlDrawModule = (function(){
 		saveDialog.parentNode.replaceChild(clone, saveDialog);
 	}
 	
+	function createSaveObject(){
+		return {version: "AlDraw1.0", state: currentState, converter: converter.copy()};
+	}
+	
 	function save(name, conf){
-		var save = {state: currentState, converter: converter.copy()};
+		var save = createSaveObject();
 		if (!conf || (saves[name] === undefined || confirm('Are you sure you want to overwrite ' + name + '?'))){
 			saves[name] = save;
 			localStorage.setItem("saves", JSON.stringify(saves));
@@ -2948,15 +2952,19 @@ var AlDrawModule = (function(){
 		}
 	}
 	
+	function loadHelper(save){
+		converter.setValues(save.converter);
+		var newState = AlDrawState.fromObject(save.state);
+		addState(newState);
+		updateView();
+	}
+	
 	function load(name){
 		var save = saves[name];
 		if (save === undefined){
 			alert('There is no save named ' + name + '.');
 		} else {
-			converter.setValues(save.converter);
-			var newState = AlDrawState.fromObject(save.state);
-			addState(newState);
-			updateView();
+			loadHelper(save);
 			$('#saveDialog').dialog('close');
 		}
 	}
@@ -2968,6 +2976,47 @@ var AlDrawModule = (function(){
 			clearSaveDialog();
 			generateSaveDialog();
 		}
+	}
+	
+	function validateSaveObject(save){
+		if (save.version !== "AlDraw1.0" || !save.state || !save.converter)
+			throw 'Invalid save';
+	}
+	
+	function loadFromFile(file){
+		let reader = new FileReader();
+		reader.readAsText(file);
+		reader.onload = function(){
+			let str = reader.result;
+			try{
+				var save = JSON.parse(str);
+				validateSaveObject(save);
+				loadHelper(save);
+				$('#fileInput').addClass('invisible');
+				$('#saveDialog').dialog('close');
+			} catch(e) {
+				alert("That is not a valid AlDraw file");
+			}
+		}
+		reader.onerror = function(){
+			console.log(reader.error);
+		}
+	}
+	
+	function saveAsAlDraw(name){
+		var save = createSaveObject();
+		var str = JSON.stringify(save);
+		var blob = new Blob([str]);
+		var url = window.URL.createObjectURL(blob);
+		var link = document.createElement("a");
+		if (name === ''){
+			name='aldraw.aldraw';
+		} else if (!name.endsWith('.aldraw')){
+			name += '.aldraw';
+		}
+		link.download = name;
+		link.href = url;
+		link.click();
 	}
 	
 	function saveAsPNG(name){
@@ -3119,6 +3168,8 @@ var AlDrawModule = (function(){
 		save: save,
 		load: load,
 		deleteSave: deleteSave,
+		loadFromFile: loadFromFile,
+		saveAsAlDraw: saveAsAlDraw,
 		saveAsPNG: saveAsPNG,
 		saveAsSVG: saveAsSVG
 	};
