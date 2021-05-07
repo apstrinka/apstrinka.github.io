@@ -3139,6 +3139,13 @@ var AlDrawModule = (function(){
 		link.click();
 	}
 	
+	function clearUndoHistory(){
+		if (confirm("Are you sure you want to clear all undo and redo history?")){
+			currentState.previous = null;
+			currentState.next = null;
+		}
+	}
+	
 	return {
 		converter: converter,
 		getCurrentState: getCurrentState,
@@ -3171,7 +3178,8 @@ var AlDrawModule = (function(){
 		loadFromFile: loadFromFile,
 		saveAsAlDraw: saveAsAlDraw,
 		saveAsPNG: saveAsPNG,
-		saveAsSVG: saveAsSVG
+		saveAsSVG: saveAsSVG,
+		clearUndoHistory: clearUndoHistory
 	};
 })();
 
