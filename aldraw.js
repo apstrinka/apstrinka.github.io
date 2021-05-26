@@ -2692,9 +2692,9 @@ var AlDrawModule = (function(){
 	var showLines = true;
 	var showPoints = true;
 	var ctx;
-	var saves = {};
-	if (localStorage.getItem('saves') !== null){
-		saves = JSON.parse(localStorage.getItem('saves'));
+	var saveNames = [];
+	if (localStorage.getItem('saveNames') !== null){
+		saveNames = JSON.parse(localStorage.getItem('saveNames'));
 	}
 	
 	var defaultSettings = {showHeader: true, dotRadius: 6, lineWidth: 2};
@@ -2893,11 +2893,15 @@ var AlDrawModule = (function(){
 	function generateSaveDialog(){
 		if (!hasSaveDialogBeenGenerated){
 			var saveDialog = document.getElementById('saveDialogContents');
-			for (var prop in saves){
-				var save = saves[prop];
+			for (var index in saveNames){
+				var name = saveNames[index];
+				var savedString = localStorage.getItem(prefixSave(name));
+				if (savedString === null)
+					continue;
+				var save = JSON.parse(savedString);
 				var input = document.createElement('input');
-				input.id = 'saveDialogInput' + prop;
-				input.value = prop;
+				input.id = 'saveDialogInput' + name;
+				input.value = name;
 				input.className = 'saveDialogRadio';
 				input.setAttribute('type', 'radio');
 				input.setAttribute('name', 'saveDialogRadio');
@@ -2905,9 +2909,9 @@ var AlDrawModule = (function(){
 					document.getElementById('saveFilename').value = this.value;
 				};
 				var label = document.createElement('label');
-				label.setAttribute('for', 'saveDialogInput' + prop);
+				label.setAttribute('for', 'saveDialogInput' + name);
 				var labelText = document.createElement('div');
-				labelText.innerHTML = prop;
+				labelText.innerText = name;
 				var newCanvas = document.createElement('canvas');
 				var size = 100;
 				newCanvas.height = size;
@@ -2938,15 +2942,22 @@ var AlDrawModule = (function(){
 		saveDialog.parentNode.replaceChild(clone, saveDialog);
 	}
 	
+	function prefixSave(name){
+		return "save_" + name;
+	}
+	
 	function createSaveObject(){
 		return {version: "AlDraw1.0", state: currentState, converter: converter.copy()};
 	}
 	
 	function save(name, conf){
 		var save = createSaveObject();
-		if (!conf || (saves[name] === undefined || confirm('Are you sure you want to overwrite ' + name + '?'))){
-			saves[name] = save;
-			localStorage.setItem("saves", JSON.stringify(saves));
+		if (!conf || (localStorage.getItem(prefixSave(name)) === null || confirm('Are you sure you want to overwrite ' + name + '?'))){
+			if (!saveNames.includes(name)){
+				saveNames.push(name)
+				localStorage.setItem("saveNames", JSON.stringify(saveNames));
+			}
+			localStorage.setItem("save_" + name, JSON.stringify(save));
 			$('#saveDialog').dialog('close');
 			clearSaveDialog();
 		}
@@ -2960,10 +2971,11 @@ var AlDrawModule = (function(){
 	}
 	
 	function load(name){
-		var save = saves[name];
-		if (save === undefined){
+		var savedString = localStorage.getItem(prefixSave(name));
+		if (savedString === null){
 			alert('There is no save named ' + name + '.');
 		} else {
+			var save = JSON.parse(savedString);
 			loadHelper(save);
 			$('#saveDialog').dialog('close');
 		}
@@ -2971,8 +2983,9 @@ var AlDrawModule = (function(){
 	
 	function deleteSave(name){
 		if (confirm('Are you sure you want to delete ' + name + '?')){
-			delete saves[name];
-			localStorage.setItem("saves", JSON.stringify(saves));
+			saveNames = saveNames.filter(function(item){ return item !== name});
+			localStorage.setItem("saveNames", JSON.stringify(saveNames));
+			localStorage.removeItem(prefixSave(name));
 			clearSaveDialog();
 			generateSaveDialog();
 		}
