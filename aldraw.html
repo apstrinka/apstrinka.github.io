@@ -124,6 +124,10 @@
 					<label for="dotRadius">Dot Radius:</label>
 					<input id="dotRadius" type="range" min="2" max="24" oninput="changeSettingDotRadius(this);">
 				</div>
+				<div style="text-align:center;">
+					<label for="previewLoad">Show Previews in Save/Load Dialog:</label>
+					<input id="previewLoad" type="checkbox" onclick="changeSettingPreviewLoad(this);">
+				</div>
 				<div style="text-align:center;margin-top:5px;">
 					<input id="settingsCancel" class="button" type="button" value="Cancel" onclick="cancelSettings()">
 					<input id="settingsDefault" class="button" type="button" value="Reset to Defaults" onclick="setDefaultSettings()">

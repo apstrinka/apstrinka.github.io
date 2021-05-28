@@ -2697,7 +2697,7 @@ var AlDrawModule = (function(){
 		saveNames = JSON.parse(localStorage.getItem('saveNames'));
 	}
 	
-	var defaultSettings = {showHeader: true, dotRadius: 6, lineWidth: 2};
+	var defaultSettings = {showHeader: true, dotRadius: 6, lineWidth: 2, previewLoad: true};
 	var settings = defaultSettings;
 	if (localStorage.getItem('settings') !== null){
 		settings = JSON.parse(localStorage.getItem('settings'));
@@ -2715,9 +2715,13 @@ var AlDrawModule = (function(){
 			settings.lineWidth = newSettings.lineWidth;
 		if (newSettings.dotRadius !== undefined)
 			settings.dotRadius = newSettings.dotRadius;
+		if (newSettings.previewLoad !== undefined)
+			settings.previewLoad = newSettings.previewLoad;
 		setHeaderVisibility(settings.showHeader);
 		resizeCanvas();
 		initContext();
+		clearSaveDialog();
+		generateSaveDialog();
 		updateView();
 		saveSettings();
 	}
@@ -2894,12 +2898,8 @@ var AlDrawModule = (function(){
 		if (!hasSaveDialogBeenGenerated){
 			var saveDialog = document.getElementById('saveDialogContents');
 			for (var index in saveNames){
-				var name = saveNames[index];
-				var savedString = localStorage.getItem(prefixSave(name));
-				if (savedString === null)
-					continue;
-				var save = JSON.parse(savedString);
-				var input = document.createElement('input');
+				let name = saveNames[index];
+				let input = document.createElement('input');
 				input.id = 'saveDialogInput' + name;
 				input.value = name;
 				input.className = 'saveDialogRadio';
@@ -2908,25 +2908,33 @@ var AlDrawModule = (function(){
 				input.onclick = function(){
 					document.getElementById('saveFilename').value = this.value;
 				};
-				var label = document.createElement('label');
+				let label = document.createElement('label');
 				label.setAttribute('for', 'saveDialogInput' + name);
-				var labelText = document.createElement('div');
+				let labelText = document.createElement('div');
 				labelText.innerText = name;
-				var newCanvas = document.createElement('canvas');
-				var size = 100;
-				newCanvas.height = size;
-				newCanvas.width = size;
-				var newContext = newCanvas.getContext("2d");
-				//newContext.lineWidth = 2;
-				var newConverter = new CoordinateConverter();
-				newConverter.height = size;
-				newConverter.width = size;
-				newConverter.setValues(save.converter);
-				newConverter.conversionRatio = newConverter.conversionRatio * size / Math.min(save.converter.height, save.converter.width);
-				var newState = AlDrawState.fromObject(save.state);
-				newState.draw(newContext, newConverter, true, false);
 				label.appendChild(labelText);
-				label.appendChild(newCanvas);
+				
+				if (settings.previewLoad){
+					let savedString = localStorage.getItem(prefixSave(name));
+					if (savedString === null)
+						continue;
+					let save = JSON.parse(savedString);
+					
+					let newCanvas = document.createElement('canvas');
+					let size = 100;
+					newCanvas.height = size;
+					newCanvas.width = size;
+					let newContext = newCanvas.getContext("2d");
+					//newContext.lineWidth = 2;
+					let newConverter = new CoordinateConverter();
+					newConverter.height = size;
+					newConverter.width = size;
+					newConverter.setValues(save.converter);
+					newConverter.conversionRatio = newConverter.conversionRatio * size / Math.min(save.converter.height, save.converter.width);
+					let newState = AlDrawState.fromObject(save.state);
+					newState.draw(newContext, newConverter, true, false);
+					label.appendChild(newCanvas);
+				}
 				saveDialog.appendChild(input);
 				saveDialog.appendChild(label);
 			}
@@ -2951,15 +2959,19 @@ var AlDrawModule = (function(){
 	}
 	
 	function save(name, conf){
-		var save = createSaveObject();
-		if (!conf || (localStorage.getItem(prefixSave(name)) === null || confirm('Are you sure you want to overwrite ' + name + '?'))){
-			if (!saveNames.includes(name)){
-				saveNames.push(name)
-				localStorage.setItem("saveNames", JSON.stringify(saveNames));
+		try{
+			var save = createSaveObject();
+			if (!conf || (localStorage.getItem(prefixSave(name)) === null || confirm('Are you sure you want to overwrite ' + name + '?'))){
+				if (!saveNames.includes(name)){
+					saveNames.push(name)
+					localStorage.setItem("saveNames", JSON.stringify(saveNames));
+				}
+				localStorage.setItem("save_" + name, JSON.stringify(save));
+				$('#saveDialog').dialog('close');
+				clearSaveDialog();
 			}
-			localStorage.setItem("save_" + name, JSON.stringify(save));
-			$('#saveDialog').dialog('close');
-			clearSaveDialog();
+		} catch(e) {
+			console.error(e);
 		}
 	}
 	
@@ -3222,11 +3234,13 @@ function openSettingsDialog(){
 	temporarySettings = {
 		showHeader: AlDrawModule.settings.showHeader,
 		lineWidth: AlDrawModule.settings.lineWidth,
-		dotRadius: AlDrawModule.settings.dotRadius
+		dotRadius: AlDrawModule.settings.dotRadius,
+		previewLoad: AlDrawModule.settings.previewLoad
 	};
 	document.getElementById('showHeader').checked = temporarySettings.showHeader;
 	document.getElementById('lineWidth').value = temporarySettings.lineWidth;
 	document.getElementById('dotRadius').value = temporarySettings.dotRadius;
+	document.getElementById('previewLoad').checked = temporarySettings.previewLoad;
 }
 
 function changeSettingHeader(input){
@@ -3239,6 +3253,10 @@ function changeSettingLineWidth(input){
 
 function changeSettingDotRadius(input){
 	AlDrawModule.updateSettings({dotRadius: input.value});
+}
+
+function changeSettingPreviewLoad(input){
+	AlDrawModule.updateSettings({previewLoad: input.checked});
 }
 
 function cancelSettings(){
@@ -3289,7 +3307,7 @@ $(document).ready(function(){
 	$(".radioButtonGroup").controlgroup();
 	$("#saveDialog").dialog({autoOpen: false, height: 400, width: 460});
 	$("#downloadDialog").dialog({autoOpen: false});
-	$("#settingsDialog").dialog({autoOpen: false});
+	$("#settingsDialog").dialog({autoOpen: false, width: 330});
 	$("#helpDialog").dialog({autoOpen: false, height:400, width:500});
 	
 	var canvas = document.getElementById("myCanvas");
